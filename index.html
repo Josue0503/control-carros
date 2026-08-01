@@ -1,346 +1,158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Carros - Importación</title>
-<style>
-  :root{
-    --bg: #121316;
-    --surface: #1B1D22;
-    --surface-2: #24272E;
-    --surface-hover: #2B2F38;
-    --border: #2E323B;
-    --border-strong: #3F4452;
-    --text: #F3F4F6;
-    --text-secondary: #9CA3AF;
-    --text-muted: #6B7280;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Vehículos y Gastos</title>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #e2e8f0;
+      --danger-bg: #fee2e2;
+      --danger-color: #dc2626;
+      --danger-border: #fca5a5;
+      --success-bg: #dcfce7;
+      --success-color: #15803d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-primary); color: var(--text-main); padding: 20px; max-width: 800px; margin: 0 auto; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h1 { font-size: 20px; font-weight: 700; }
     
-    --accent: #EAB308;
-    --accent-hover: #CA8A04;
-    --accent-bg: rgba(234, 179, 8, 0.12);
-    --accent-text: #FACC15;
+    .status { font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .status.info { color: var(--primary); }
+    .status.success { color: var(--success-color); background: var(--success-bg); }
+    .status.error { color: var(--danger-color); background: var(--danger-bg); }
 
-    --success: #22C55E;
-    --success-bg: rgba(34, 197, 94, 0.12);
-    --success-text: #4ADE80;
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .metric { background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+    .metric .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .metric .value { font-size: 18px; font-weight: 700; }
+    .metric .value.pos { color: var(--success-color); }
+    .metric .value.neg { color: var(--danger-color); }
 
-    --danger: #EF4444;
-    --danger-bg: rgba(239, 68, 68, 0.12);
-    --danger-text: #F87171;
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 8px; }
+    .tabs { display: flex; gap: 4px; background: #e2e8f0; padding: 3px; border-radius: 6px; }
+    .tab-btn { border: none; background: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--text-secondary); }
+    .tab-btn.active { background: white; color: var(--text-main); shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-    --radius: 12px;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
+    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn.secondary { background: white; color: var(--text-main); border: 1px solid var(--border); }
+    .btn.small { padding: 4px 8px; font-size: 12px; }
+    .btn.danger-ghost { background: transparent; color: var(--danger-color); border: 1px solid var(--danger-border); }
+    .btn.danger-ghost:hover { background: var(--danger-bg); }
 
-  *{box-sizing:border-box;}
+    .car { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
+    .car-head { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .car-head:hover { background-color: #f8fafc; }
+    .car-title { display: flex; align-items: center; gap: 8px; }
+    .car-title .name { font-weight: 700; font-size: 15px; }
+    .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+    .badge.repair { background: #fef3c7; color: #d97706; }
+    .badge.sold { background: var(--success-bg); color: var(--success-color); }
+    .days-tag { font-size: 11px; color: var(--text-muted); }
 
-  body{
-    margin:0;
-    font-family: var(--font-sans);
-    background: var(--bg);
-    color: var(--text);
-    line-height:1.5;
-    -webkit-font-smoothing: antialiased;
-  }
+    .car-nums { font-size: 13px; text-align: right; }
+    .arrow-icon { margin-left: 8px; font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+    .is-open .arrow-icon { transform: rotate(180deg); }
 
-  .wrap{max-width:960px;margin:0 auto;padding:40px 20px 80px;}
+    .car-body { padding: 16px; border-top: 1px solid var(--border); display: none; background: #fafafa; }
+    .car-body.open { display: block; }
+    .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .row .l { color: var(--text-secondary); }
+    .row .r { font-weight: 600; }
 
-  .masthead{
-    display:flex;justify-content:space-between;align-items:flex-end;
-    margin-bottom:28px;flex-wrap:wrap;gap:16px;
-  }
-  .masthead h1{
-    font-size:28px;
-    font-weight:700;
-    margin:0 0 4px;
-    letter-spacing:-0.02em;
-    color: var(--text);
-  }
-  .masthead p{margin:0;color:var(--text-secondary);font-size:14px;}
-  .masthead-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .expenses-list { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 8px 0 16px 0; }
+    .expense-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+    .expense-row:last-child { border-bottom: none; }
+    .expense-checkbox { cursor: pointer; width: 16px; height: 16px; }
 
-  /* Botones */
-  .btn{
-    font-family: var(--font-sans);
-    font-size:14px;
-    font-weight:600;
-    padding:10px 18px;
-    border-radius:var(--radius);
-    border:1px solid var(--accent);
-    background:var(--accent);
-    color:#121316;
-    cursor:pointer;
-    transition: all 0.2s ease;
-  }
-  .btn:hover{
-    background:var(--accent-hover);
-    border-color:var(--accent-hover);
-    transform: translateY(-1px);
-  }
-  .btn.secondary{
-    background:var(--surface-2);
-    color:var(--text);
-    border:1px solid var(--border-strong);
-  }
-  .btn.secondary:hover{
-    background:var(--surface-hover);
-    border-color:var(--text-secondary);
-  }
-  .btn.small{padding:7px 14px;font-size:13px;border-radius:8px;}
-  .btn.danger-ghost{
-    background:transparent;
-    border:1px solid var(--border-strong);
-    color:var(--danger);
-    font-weight:500;
-  }
-  .btn.danger-ghost:hover{
-    background: var(--danger-bg);
-    border-color: var(--danger);
-  }
+    .btn-delete-selected {
+      background-color: var(--danger-bg);
+      color: var(--danger-color);
+      border: 1px solid var(--danger-border);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-delete-selected:hover { background-color: #fca5a5; color: #7f1d1d; }
 
-  .status{font-size:13px;font-weight:500;color:var(--text-muted);margin-top:6px;width:100%;transition: all 0.3s;}
-  .status.error{color:var(--danger);}
-  .status.success{color:var(--success-text);}
+    .multi-expenses-container { background: white; border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    .expense-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .expense-input-row input { flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; }
 
-  /* Métricas */
-  .metrics{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:14px;
-    margin-bottom:28px;
-  }
-  .metric{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:18px 20px;
-  }
-  .metric .label{
-    font-size:12px;
-    font-weight:600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color:var(--text-muted);
-    margin-bottom:8px;
-  }
-  .metric .value{
-    font-size:24px;
-    font-weight:700;
-    letter-spacing: -0.02em;
-    color: var(--text);
-  }
-  .metric .value.pos{color:var(--success-text);}
-  .metric .value.neg{color:var(--danger-text);}
+    .actions-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
 
-  /* Filtros */
-  .filter-tabs{
-    display:flex;
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:4px;
-    gap:4px;
-    margin-bottom:20px;
-    width:fit-content;
-  }
-  .tab-btn{
-    background:transparent;
-    border:none;
-    color:var(--text-secondary);
-    padding:6px 14px;
-    font-size:13px;
-    font-weight:600;
-    border-radius:6px;
-    cursor:pointer;
-    transition:all 0.2s ease;
-  }
-  .tab-btn.active{
-    background:var(--surface-2);
-    color:var(--accent-text);
-  }
+    /* Modales */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 8px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .modal h2 { font-size: 16px; margin-bottom: 12px; }
+    .modal input { width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
-  /* Tarjeta Carro */
-  .car{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    margin-bottom:14px;
-    overflow:hidden;
-  }
-  
-  .car-head{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:18px 20px;cursor:pointer;gap:12px;flex-wrap:wrap;
-    background: var(--surface);
-    transition: background 0.2s ease;
-  }
-  .car-head:hover{background:var(--surface-2);}
-  .car-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .car-title .name{font-weight:600;font-size:16px;color:var(--text);}
-  .arrow-icon{
-    font-size:12px;
-    color:var(--text-muted);
-    transition:transform 0.2s ease;
-  }
-  .car-head.is-open .arrow-icon{ transform: rotate(180deg); }
-  
-  .badge{
-    font-size:11px;
-    font-weight:700;
-    padding:3px 8px;
-    border-radius:20px;
-    text-transform: uppercase;
-  }
-  .badge.repair{background:var(--accent-bg);color:var(--accent-text);border:1px solid rgba(234,179,8,0.3);}
-  .badge.sold{background:var(--success-bg);color:var(--success-text);border:1px solid rgba(34,197,94,0.3);}
-
-  .days-tag{
-    font-size:12px;
-    font-weight:600;
-    padding:2px 8px;
-    border-radius:6px;
-    background:var(--surface-2);
-    color:var(--text-secondary);
-  }
-
-  .car-nums{text-align:right;font-size:13.5px;color:var(--text-secondary);}
-  .car-nums .profit{font-size:14.5px;font-weight:700;color:var(--text);margin-top:2px;}
-  .car-nums .profit.pos{color:var(--success-text);}
-  .car-nums .profit.neg{color:var(--danger-text);}
-
-  .car-body{
-    border-top:1px solid var(--border);
-    padding:20px;
-    background:var(--surface-2);
-    display:none;
-  }
-  .car-body.open{display:block;}
-
-  .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px;border-bottom:1px dashed var(--border);}
-  .row .l{color:var(--text-secondary);}
-  .row .r{font-weight:600;color:var(--text);}
-
-  .expenses-list{margin:14px 0;}
-  .expense-row{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 14px;background:var(--surface);border:1px solid var(--border);
-    border-radius:8px;margin-bottom:8px;font-size:13.5px;
-  }
-  .expense-row .amt{font-weight:600;color:var(--accent-text);}
-  .expense-row button{
-    background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;
-  }
-  .expense-row button:hover{color:var(--danger);}
-
-  .multi-expenses-container{
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    padding: 14px;
-    border-radius: 10px;
-    margin-top: 14px;
-  }
-  .expense-input-row{display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;}
-  .expense-input-row input[type=text]{flex:2;min-width:140px;}
-  .expense-input-row input[type=number]{flex:1;min-width:90px;}
-
-  input{
-    font-family:var(--font-sans);
-    font-size:14px;
-    padding:8px 12px;
-    border-radius:8px;
-    border:1px solid var(--border-strong);
-    background:var(--surface);
-    color:var(--text);
-  }
-
-  .actions-row{
-    display:flex;justify-content:space-between;align-items:center;
-    margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
-    flex-wrap:wrap;gap:10px;
-  }
-
-  .modal-overlay{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    align-items:center;justify-content:center;z-index:50;padding:20px;
-  }
-  .modal-overlay.open{display:flex;}
-  .modal{
-    background:var(--surface);border:1px solid var(--border-strong);
-    border-radius:16px;padding:28px;width:100%;max-width:420px;
-  }
-  .modal h2{font-size:20px;font-weight:700;margin:0 0 20px;}
-  .field{margin-bottom:16px;}
-  .field label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;}
-  .field input{width:100%;}
-  .empty{text-align:center;padding:40px;color:var(--text-muted);background:var(--surface);border-radius:12px;}
-</style>
+    .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="masthead">
+  <header>
+    <h1>Vehículos y Gastos</h1>
     <div>
-      <h1>Control de carros</h1>
-      <p>Importación, Reparación y Venta</p>
+      <span id="status" class="status"></span>
+      <button class="btn secondary small" id="btn-sync">🔄 Sincronizar</button>
     </div>
-    <div class="masthead-btns">
-      <button class="btn" id="btn-add-car">+ Agregar carro</button>
-      <button class="btn secondary" id="btn-sync">↻ Sincronizar</button>
+  </header>
+
+  <div id="metrics" class="metrics-grid"></div>
+
+  <div class="controls">
+    <div class="tabs">
+      <button class="tab-btn active" data-filter="all">Todos</button>
+      <button class="tab-btn" data-filter="active">En Proceso</button>
+      <button class="tab-btn" data-filter="sold">Vendidos</button>
     </div>
-    <div class="status" id="status"></div>
-  </div>
-
-  <div class="metrics" id="metrics"></div>
-
-  <div class="filter-tabs">
-    <button class="tab-btn active" data-filter="all">Todos</button>
-    <button class="tab-btn" data-filter="active">En reparación</button>
-    <button class="tab-btn" data-filter="sold">Vendidos</button>
+    <button class="btn" id="btn-add-car">+ Nuevo Carro</button>
   </div>
 
   <div id="car-list"></div>
 
-</div>
-
-<!-- Modal Nuevo Carro -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <h2>Nuevo vehículo</h2>
-    <div class="field">
-      <label>Vehículo (Marca / Modelo / Año)</label>
-      <input type="text" id="new-name" placeholder="Ej: Nissan Rogue 2023">
-    </div>
-    <div class="field">
-      <label>Precio de Compra (USD)</label>
-      <input type="number" id="new-price" placeholder="0.00" step="0.01">
-    </div>
-    <div class="field">
-      <label>Fecha de Compra</label>
+  <!-- Modal Agregar Carro -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h2>Agregar Nuevo Vehículo</h2>
+      <input type="text" id="new-name" placeholder="Nombre / Modelo (ej: Toyota Corolla)">
+      <input type="number" id="new-price" placeholder="Precio de compra ($)" step="0.01">
       <input type="date" id="new-date">
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-      <button class="btn secondary" id="btn-cancel">Cancelar</button>
-      <button class="btn" id="btn-save-car">Guardar</button>
+      <div class="modal-actions">
+        <button class="btn secondary" id="btn-cancel">Cancelar</button>
+        <button class="btn" id="btn-save-car">Guardar Vehículo</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Modal Venta -->
-<div class="modal-overlay" id="modal-sell">
-  <div class="modal">
-    <h2>Marcar como Vendido</h2>
-    <div class="field">
-      <label>Precio de Venta Final (USD)</label>
-      <input type="number" id="sell-price" placeholder="0.00" step="0.01">
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-      <button class="btn secondary" id="btn-cancel-sell">Cancelar</button>
-      <button class="btn" id="btn-confirm-sell">Confirmar Venta</button>
+  <!-- Modal Marcar Vendido -->
+  <div class="modal-overlay" id="modal-sell">
+    <div class="modal">
+      <h2>Marcar Vehículo como Vendido</h2>
+      <input type="number" id="sell-price" placeholder="Precio de venta final ($)" step="0.01">
+      <div class="modal-actions">
+        <button class="btn secondary" id="btn-cancel-sell">Cancelar</button>
+        <button class="btn" id="btn-confirm-sell">Confirmar Venta</button>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1b7dGmQh2DO0rs8pBH30xZbktf9MzqkvhSWHCuJo65x7FOOE63eFqY0YoeT2S7gLW4A/exec';
@@ -365,8 +177,9 @@ function calcDays(startDateStr){
   return Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24)); 
 }
 
+// Envío seguro a Google Apps Script
 async function callGoogleAppsScript(action, data){
-  showStatus('Cargando datos, por favor espere...');
+  showStatus('Guardando...');
   try{
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
@@ -374,12 +187,12 @@ async function callGoogleAppsScript(action, data){
     });
     const result = await response.json();
     if(result.success){
-      showStatus('Sincronizado', 'success');
-      setTimeout(()=> showStatus(''), 2500);
+      showStatus('Guardado en la nube', 'success');
+      setTimeout(()=> showStatus(''), 2000);
       return result;
     }
   }catch(e){
-    showStatus('Error de sincronización', 'error');
+    showStatus('Error al guardar', 'error');
   }
 }
 
@@ -387,7 +200,16 @@ async function loadFromSheet(){
   showStatus('Cargando...');
   const result = await callGoogleAppsScript('getCars', {});
   if(result && result.cars){
-    cars = result.cars;
+    cars = result.cars.map(c => {
+      if(c.expenses){
+        c.expenses = c.expenses.map(e => ({
+          id: e.id || 'e_' + Math.random().toString(36).substr(2, 9),
+          desc: e.desc,
+          amount: e.amount
+        }));
+      }
+      return c;
+    });
     render();
     showStatus('');
   }
@@ -406,11 +228,36 @@ function carProfit(car){
   return Number(car.salePrice||0) - carInvested(car);
 }
 
+// Renderizado de lista de gastos con Checkboxes
+function renderExpensesList(car){
+  if(!car.expenses || car.expenses.length === 0){
+    return '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>';
+  }
+
+  const itemsHtml = car.expenses.map((e) => `
+    <div class="expense-row" style="display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" class="expense-checkbox exp-check-${car.id}" value="${e.id}">
+      <span style="flex-grow:1;">${escapeHtml(e.desc)}</span>
+      <span class="amt">${fmt(e.amount)}</span>
+    </div>
+  `).join('');
+
+  const headerHtml = `
+    <div style="display:flex; align-items:center; justify-style:space-between; margin-bottom:8px;">
+      <label style="font-size:12px; cursor:pointer; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+        <input type="checkbox" class="expense-checkbox" onchange="toggleSelectAllExpenses('${car.id}', this.checked)"> Seleccionar todos
+      </label>
+      <button class="btn-delete-selected" onclick="deleteSelectedExpenses('${car.id}')">🗑️ Eliminar seleccionados</button>
+    </div>
+  `;
+
+  return headerHtml + itemsHtml;
+}
+
 function updateSingleCarUI(carId){
   const car = cars.find(c => c.id === carId);
   if(!car) return;
 
-  // 1. Actualizar números del encabezado sin cerrar la tarjeta
   const cardNode = document.getElementById(`car-${carId}`);
   if(cardNode){
     const investedNode = cardNode.querySelector('.car-invested-val');
@@ -419,32 +266,12 @@ function updateSingleCarUI(carId){
     const expTotalNode = cardNode.querySelector('.car-exp-total-val');
     if(expTotalNode) expTotalNode.textContent = fmt(carExpensesTotal(car));
 
-    // 2. Actualizar lista visual de gastos
     const listNode = cardNode.querySelector('.expenses-list');
     if(listNode){
-      listNode.innerHTML = (car.expenses||[]).map((e, idx)=>`
-        <div class="expense-row">
-          <span>${escapeHtml(e.desc)}</span>
-          <div>
-            <span class="amt">${fmt(e.amount)}</span>
-            <button onclick="removeExpense('${car.id}', ${idx})" title="Eliminar gasto">×</button>
-          </div>
-        </div>
-      `).join('') || '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>';
-    }
-
-    // 3. Limpiar los inputs
-    const inputsContainer = document.getElementById(`expenses-inputs-${carId}`);
-    if(inputsContainer){
-      inputsContainer.innerHTML = `
-        <div class="expense-input-row">
-          <input type="text" placeholder="Descripción" class="exp-desc">
-          <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
-        </div>`;
+      listNode.innerHTML = renderExpensesList(car);
     }
   }
 
-  // 4. Actualizar tarjetas superiores de resumen
   renderMetrics();
 }
 
@@ -519,15 +346,7 @@ function render(){
 
         <div style="margin-top:16px;font-weight:600;font-size:13px;color:var(--text-secondary);">Detalle de Gastos:</div>
         <div class="expenses-list">
-          ${(car.expenses||[]).map((e, idx)=>`
-            <div class="expense-row">
-              <span>${escapeHtml(e.desc)}</span>
-              <div>
-                <span class="amt">${fmt(e.amount)}</span>
-                <button onclick="removeExpense('${car.id}', ${idx})" title="Eliminar gasto">×</button>
-              </div>
-            </div>
-          `).join('') || '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>'}
+          ${renderExpensesList(car)}
         </div>
 
         <div class="multi-expenses-container">
@@ -559,6 +378,37 @@ function render(){
   }).join('');
 }
 
+// 🔘 Seleccionar / Deseleccionar todos
+function toggleSelectAllExpenses(carId, isChecked){
+  const checkboxes = document.querySelectorAll(`.exp-check-${carId}`);
+  checkboxes.forEach(cb => cb.checked = isChecked);
+}
+
+// 🗑️ ELIMINACIÓN MASIVA EN UN SOLO REQUEST
+async function deleteSelectedExpenses(carId){
+  const car = cars.find(c => c.id === carId);
+  if(!car || !car.expenses) return;
+
+  const checkboxes = document.querySelectorAll(`.exp-check-${carId}:checked`);
+  const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+  if(selectedIds.length === 0){
+    alert('Selecciona al menos un gasto para eliminar.');
+    return;
+  }
+
+  if(!confirm(`¿Deseas eliminar los ${selectedIds.length} gastos seleccionados?`)) return;
+
+  // 1. Filtrar los gastos en memoria
+  car.expenses = car.expenses.filter(e => !selectedIds.includes(e.id));
+
+  // 2. Actualizar interfaz al instante
+  updateSingleCarUI(carId);
+
+  // 3. Enviar un único envío seguro a la nube
+  await callGoogleAppsScript('saveCar', { car });
+}
+
 function escapeHtml(s){
   const d = document.createElement('div');
   d.textContent = s || '';
@@ -581,7 +431,7 @@ function addExpenseRow(carId){
   container.appendChild(row);
 }
 
-function saveExpenses(carId){
+async function saveExpenses(carId){
   const car = cars.find(c=>c.id===carId);
   const container = document.getElementById(`expenses-inputs-${carId}`);
   const descs = container.querySelectorAll('.exp-desc');
@@ -593,24 +443,26 @@ function saveExpenses(carId){
     const amount = parseFloat(amts[i].value);
     if(desc && !isNaN(amount) && amount > 0){
       car.expenses = car.expenses || [];
-      car.expenses.push({desc, amount});
+      car.expenses.push({
+        id: 'e_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        desc, 
+        amount
+      });
       added = true;
     }
   });
 
   if(added){
-    updateSingleCarUI(carId); // ⚡ Actualiza al instante solo esta tarjeta
-    callGoogleAppsScript('saveCar', {car}); // Guarda en segundo plano
+    updateSingleCarUI(carId);
+    await callGoogleAppsScript('saveCar', { car });
+    container.innerHTML = `
+      <div class="expense-input-row">
+        <input type="text" placeholder="Descripción" class="exp-desc">
+        <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
+      </div>`;
   }else{
     alert('Ingresa al menos una descripción y monto válidos.');
   }
-}
-
-function removeExpense(carId, idx){
-  const car = cars.find(c=>c.id===carId);
-  car.expenses.splice(idx, 1);
-  updateSingleCarUI(carId); // ⚡ Elimina el elemento sin redibujar todo
-  callGoogleAppsScript('saveCar', {car}); // Guarda en segundo plano
 }
 
 async function deleteCar(id){
@@ -628,7 +480,7 @@ function openSellModal(id){
 
 document.getElementById('btn-cancel-sell').onclick = () => document.getElementById('modal-sell').classList.remove('open');
 
-document.getElementById('btn-confirm-sell').onclick = () => {
+document.getElementById('btn-confirm-sell').onclick = async () => {
   const price = parseFloat(document.getElementById('sell-price').value);
   if(isNaN(price) || price <= 0){ alert('Ingresa un precio válido.'); return; }
   
@@ -638,7 +490,7 @@ document.getElementById('btn-confirm-sell').onclick = () => {
   
   document.getElementById('modal-sell').classList.remove('open');
   render();
-  callGoogleAppsScript('saveCar', {car});
+  await callGoogleAppsScript('saveCar', { car });
 };
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -654,7 +506,7 @@ document.getElementById('btn-sync').onclick = loadFromSheet;
 document.getElementById('btn-add-car').onclick = () => document.getElementById('modal-overlay').classList.add('open');
 document.getElementById('btn-cancel').onclick = () => document.getElementById('modal-overlay').classList.remove('open');
 
-document.getElementById('btn-save-car').onclick = () => {
+document.getElementById('btn-save-car').onclick = async () => {
   const name = document.getElementById('new-name').value.trim();
   const price = parseFloat(document.getElementById('new-price').value);
   const date = document.getElementById('new-date').value;
@@ -670,7 +522,7 @@ document.getElementById('btn-save-car').onclick = () => {
   cars.push(newCar);
   openCarId = newCar.id;
   render();
-  callGoogleAppsScript('saveCar', {car: newCar});
+  await callGoogleAppsScript('saveCar', { car: newCar });
   document.getElementById('modal-overlay').classList.remove('open');
 };
 
