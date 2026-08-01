@@ -30,10 +30,24 @@
 
     .header-actions { display: flex; gap: 10px; align-items: center; }
     
+    .status-container { display: flex; align-items: center; gap: 8px; }
     .status { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; }
     .status.info { color: var(--primary-yellow); }
     .status.success { color: var(--green-profit); background: var(--green-bg); }
     .status.error { color: var(--danger-color); background: var(--danger-bg); }
+
+    /* Spinner / Circulito de carga */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--primary-yellow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    .spinner.show { display: inline-block; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
     @media (max-width: 640px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -127,7 +141,10 @@
       <div class="subtitle">Importación, Reparación y Venta</div>
     </div>
     <div class="header-actions">
-      <span id="status" class="status"></span>
+      <div class="status-container">
+        <div id="spinner" class="spinner"></div>
+        <span id="status" class="status"></span>
+      </div>
       <button class="btn" id="btn-add-car">+ Agregar carro</button>
       <button class="btn secondary" id="btn-sync">🔄 Sincronizar</button>
     </div>
@@ -179,10 +196,18 @@ let openCarId = null;
 let currentFilter = 'all';
 let carToSellId = null;
 
-function showStatus(msg, type = 'info'){
+function showStatus(msg, type = 'info', showSpinner = false){
   const el = document.getElementById('status');
+  const spinner = document.getElementById('spinner');
+  
   el.textContent = msg;
   el.className = 'status ' + type;
+
+  if(showSpinner){
+    spinner.classList.add('show');
+  } else {
+    spinner.classList.remove('show');
+  }
 }
 
 function fmt(n){ return '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -194,9 +219,9 @@ function calcDays(startDateStr){
   return Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24)); 
 }
 
-// Envío a Google Apps Script
+// Envío a Google Apps Script con delay y circulito de carga
 async function callGoogleAppsScript(action, data){
-  showStatus('Cargando datos...');
+  showStatus('Guardando...', 'info', true);
   try{
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
@@ -204,17 +229,17 @@ async function callGoogleAppsScript(action, data){
     });
     const result = await response.json();
     if(result.success){
-      showStatus('Guardado en la nube', 'success');
+      showStatus('Guardado en la nube', 'success', false);
       setTimeout(()=> showStatus(''), 2000);
       return result;
     }
   }catch(e){
-    showStatus('Error al guardar', 'error');
+    showStatus('Error al guardar', 'error', false);
   }
 }
 
 async function loadFromSheet(){
-  showStatus('Cargando...');
+  showStatus('Cargando...', 'info', true);
   const result = await callGoogleAppsScript('getCars', {});
   if(result && result.cars){
     cars = result.cars.map(c => {
@@ -228,7 +253,7 @@ async function loadFromSheet(){
       return c;
     });
     render();
-    showStatus('');
+    showStatus('', '', false);
   }
 }
 
@@ -245,7 +270,6 @@ function carProfit(car){
   return Number(car.salePrice||0) - carInvested(car);
 }
 
-// Render de la lista de gastos con checkboxes y botón masivo
 function renderExpensesList(car){
   if(!car.expenses || car.expenses.length === 0){
     return '<div style="font-size:12px;color:var(--text-secondary);">Sin gastos cargados aún.</div>';
@@ -397,13 +421,11 @@ function render(){
   }).join('');
 }
 
-// 🔘 Seleccionar / Deseleccionar todos los checkboxes de un carro
 function toggleSelectAllExpenses(carId, isChecked){
   const checkboxes = document.querySelectorAll(`.exp-check-${carId}`);
   checkboxes.forEach(cb => cb.checked = isChecked);
 }
 
-// 🗑️ ELIMINACIÓN MASIVA EN UN SOLO REQUEST
 async function deleteSelectedExpenses(carId){
   const car = cars.find(c => c.id === carId);
   if(!car || !car.expenses) return;
@@ -418,13 +440,10 @@ async function deleteSelectedExpenses(carId){
 
   if(!confirm(`¿Deseas eliminar los ${selectedIds.length} gastos seleccionados?`)) return;
 
-  // 1. Filtrar en memoria
   car.expenses = car.expenses.filter(e => !selectedIds.includes(e.id));
 
-  // 2. Actualizar UI al instante
   updateSingleCarUI(carId);
 
-  // 3. Enviar 1 solo request a Google Sheets
   await callGoogleAppsScript('saveCar', { car });
 }
 
@@ -450,6 +469,7 @@ function addExpenseRow(carId){
   container.appendChild(row);
 }
 
+// AL GUARDAR GASTOS: SE LIMPIAN LAS CAJAS DE TEXTO PARA EVITAR DUPLICADOS
 async function saveExpenses(carId){
   const car = cars.find(c=>c.id===carId);
   const container = document.getElementById(`expenses-inputs-${carId}`);
@@ -472,13 +492,18 @@ async function saveExpenses(carId){
   });
 
   if(added){
-    updateSingleCarUI(carId);
-    await callGoogleAppsScript('saveCar', { car });
+    // 1. Limpiar inmediatamente el formulario de ingreso
     container.innerHTML = `
       <div class="expense-input-row">
         <input type="text" placeholder="Descripción" class="exp-desc">
         <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
       </div>`;
+
+    // 2. Actualizar la lista en pantalla
+    updateSingleCarUI(carId);
+
+    // 3. Enviar a la nube mostrando el spinner de carga
+    await callGoogleAppsScript('saveCar', { car });
   }else{
     alert('Ingresa al menos una descripción y monto válidos.');
   }
