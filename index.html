@@ -3,115 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Vehículos y Gastos</title>
+  <title>Control de carros</title>
   <style>
     :root {
-      --bg-primary: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #94a3b8;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --border: #e2e8f0;
-      --danger-bg: #fee2e2;
-      --danger-color: #dc2626;
-      --danger-border: #fca5a5;
-      --success-bg: #dcfce7;
-      --success-color: #15803d;
+      --bg-primary: #0f1117;
+      --card-bg: #181a20;
+      --card-inner: #21242d;
+      --text-main: #ffffff;
+      --text-secondary: #9ca3af;
+      --primary-yellow: #eab308;
+      --primary-yellow-hover: #ca8a04;
+      --green-profit: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.15);
+      --border: #2e323e;
+      --danger-bg: rgba(239, 68, 68, 0.2);
+      --danger-color: #ef4444;
+      --danger-border: rgba(239, 68, 68, 0.4);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg-primary); color: var(--text-main); padding: 20px; max-width: 800px; margin: 0 auto; }
+    body { background-color: var(--bg-primary); color: var(--text-main); padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    h1 { font-size: 20px; font-weight: 700; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
     
-    .status { font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: inline-block; }
-    .status.info { color: var(--primary); }
-    .status.success { color: var(--success-color); background: var(--success-bg); }
+    .status { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; }
+    .status.info { color: var(--primary-yellow); }
+    .status.success { color: var(--green-profit); background: var(--green-bg); }
     .status.error { color: var(--danger-color); background: var(--danger-bg); }
 
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .metric { background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
-    .metric .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-    .metric .value { font-size: 18px; font-weight: 700; }
-    .metric .value.pos { color: var(--success-color); }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    @media (max-width: 640px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+    
+    .metric { background: var(--card-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border); }
+    .metric .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; }
+    .metric .value { font-size: 22px; font-weight: 700; }
+    .metric .value.pos { color: var(--green-profit); }
     .metric .value.neg { color: var(--danger-color); }
 
-    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 8px; }
-    .tabs { display: flex; gap: 4px; background: #e2e8f0; padding: 3px; border-radius: 6px; }
-    .tab-btn { border: none; background: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: var(--text-secondary); }
-    .tab-btn.active { background: white; color: var(--text-main); shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 6px; background: var(--card-bg); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+    .tab-btn { border: none; background: none; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--text-secondary); }
+    .tab-btn.active { background: var(--primary-yellow); color: #000; }
 
-    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-    .btn:hover { background: var(--primary-hover); }
-    .btn.secondary { background: white; color: var(--text-main); border: 1px solid var(--border); }
-    .btn.small { padding: 4px 8px; font-size: 12px; }
+    .btn { background: var(--primary-yellow); color: #000; border: none; padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { background: var(--primary-yellow-hover); }
+    .btn.secondary { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); }
+    .btn.secondary:hover { background: var(--card-inner); }
+    .btn.small { padding: 5px 10px; font-size: 12px; }
     .btn.danger-ghost { background: transparent; color: var(--danger-color); border: 1px solid var(--danger-border); }
     .btn.danger-ghost:hover { background: var(--danger-bg); }
 
-    .car { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
-    .car-head { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
-    .car-head:hover { background-color: #f8fafc; }
-    .car-title { display: flex; align-items: center; gap: 8px; }
-    .car-title .name { font-weight: 700; font-size: 15px; }
-    .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
-    .badge.repair { background: #fef3c7; color: #d97706; }
-    .badge.sold { background: var(--success-bg); color: var(--success-color); }
-    .days-tag { font-size: 11px; color: var(--text-muted); }
+    .car { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; }
+    .car-head { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .car-head:hover { background-color: rgba(255,255,255,0.02); }
+    .car-title { display: flex; align-items: center; gap: 10px; }
+    .car-title .name { font-weight: 700; font-size: 16px; }
+    
+    .badge { font-size: 10px; padding: 3px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase; }
+    .badge.repair { background: rgba(234, 179, 8, 0.2); color: var(--primary-yellow); border: 1px solid rgba(234, 179, 8, 0.4); }
+    .badge.sold { background: var(--green-bg); color: var(--green-profit); border: 1px solid rgba(34, 197, 94, 0.4); }
+    .days-tag { font-size: 11px; color: var(--text-secondary); background: var(--card-inner); padding: 3px 8px; border-radius: 4px; }
 
-    .car-nums { font-size: 13px; text-align: right; }
-    .arrow-icon { margin-left: 8px; font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+    .car-nums { font-size: 13px; text-align: right; color: var(--text-secondary); }
+    .car-nums strong { color: var(--text-main); }
+    .car-nums .profit { font-weight: 700; font-size: 13px; margin-top: 2px; }
+    .car-nums .profit.pos { color: var(--green-profit); }
+
+    .arrow-icon { margin-left: 12px; font-size: 10px; color: var(--text-secondary); transition: transform 0.2s; }
     .is-open .arrow-icon { transform: rotate(180deg); }
 
-    .car-body { padding: 16px; border-top: 1px solid var(--border); display: none; background: #fafafa; }
+    .car-body { padding: 18px; border-top: 1px solid var(--border); display: none; background: #13151b; }
     .car-body.open { display: block; }
-    .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
     .row .l { color: var(--text-secondary); }
     .row .r { font-weight: 600; }
 
-    .expenses-list { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 8px 0 16px 0; }
-    .expense-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
-    .expense-row:last-child { border-bottom: none; }
-    .expense-checkbox { cursor: pointer; width: 16px; height: 16px; }
+    .expenses-header { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 8px 0; }
+    .expenses-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .expense-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; }
+    .expense-row .amt { font-weight: 700; color: var(--primary-yellow); margin-right: 8px; }
+    
+    .expense-checkbox { cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary-yellow); }
 
     .btn-delete-selected {
-      background-color: var(--danger-bg);
+      background: var(--danger-bg);
       color: var(--danger-color);
       border: 1px solid var(--danger-border);
       font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
     }
-    .btn-delete-selected:hover { background-color: #fca5a5; color: #7f1d1d; }
+    .btn-delete-selected:hover { background: rgba(239, 68, 68, 0.4); }
 
-    .multi-expenses-container { background: white; border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    .multi-expenses-container { background: var(--card-bg); border: 1px solid var(--border); padding: 14px; border-radius: 8px; margin-bottom: 16px; }
     .expense-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .expense-input-row input { flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; }
+    .expense-input-row input { flex: 1; padding: 8px 12px; font-size: 13px; background: var(--card-inner); border: 1px solid var(--border); color: #fff; border-radius: 6px; }
+    .expense-input-row input:focus { outline: 1px solid var(--primary-yellow); }
 
     .actions-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
 
     /* Modales */
-    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; }
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 100; }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 8px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .modal h2 { font-size: 16px; margin-bottom: 12px; }
-    .modal input { width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .modal { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; width: 100%; max-width: 420px; color: white; }
+    .modal h2 { font-size: 18px; margin-bottom: 16px; font-weight: 700; }
+    .modal input { width: 100%; padding: 10px; margin-bottom: 12px; background: var(--card-inner); border: 1px solid var(--border); color: white; border-radius: 6px; font-size: 13px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 
-    .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+    .empty { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 14px; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Vehículos y Gastos</h1>
     <div>
+      <h1>Control de carros</h1>
+      <div class="subtitle">Importación, Reparación y Venta</div>
+    </div>
+    <div class="header-actions">
       <span id="status" class="status"></span>
-      <button class="btn secondary small" id="btn-sync">🔄 Sincronizar</button>
+      <button class="btn" id="btn-add-car">+ Agregar carro</button>
+      <button class="btn secondary" id="btn-sync">🔄 Sincronizar</button>
     </div>
   </header>
 
@@ -120,10 +138,9 @@
   <div class="controls">
     <div class="tabs">
       <button class="tab-btn active" data-filter="all">Todos</button>
-      <button class="tab-btn" data-filter="active">En Proceso</button>
+      <button class="tab-btn" data-filter="active">En reparación</button>
       <button class="tab-btn" data-filter="sold">Vendidos</button>
     </div>
-    <button class="btn" id="btn-add-car">+ Nuevo Carro</button>
   </div>
 
   <div id="car-list"></div>
@@ -132,7 +149,7 @@
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
       <h2>Agregar Nuevo Vehículo</h2>
-      <input type="text" id="new-name" placeholder="Nombre / Modelo (ej: Toyota Corolla)">
+      <input type="text" id="new-name" placeholder="Nombre / Modelo (ej: Nissan Rogue 2023)">
       <input type="number" id="new-price" placeholder="Precio de compra ($)" step="0.01">
       <input type="date" id="new-date">
       <div class="modal-actions">
@@ -177,9 +194,9 @@ function calcDays(startDateStr){
   return Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24)); 
 }
 
-// Envío seguro a Google Apps Script
+// Envío a Google Apps Script
 async function callGoogleAppsScript(action, data){
-  showStatus('Guardando...');
+  showStatus('Cargando datos...');
   try{
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
@@ -228,22 +245,24 @@ function carProfit(car){
   return Number(car.salePrice||0) - carInvested(car);
 }
 
-// Renderizado de lista de gastos con Checkboxes
+// Render de la lista de gastos con checkboxes y botón masivo
 function renderExpensesList(car){
   if(!car.expenses || car.expenses.length === 0){
-    return '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>';
+    return '<div style="font-size:12px;color:var(--text-secondary);">Sin gastos cargados aún.</div>';
   }
 
   const itemsHtml = car.expenses.map((e) => `
-    <div class="expense-row" style="display:flex; align-items:center; gap:10px;">
-      <input type="checkbox" class="expense-checkbox exp-check-${car.id}" value="${e.id}">
-      <span style="flex-grow:1;">${escapeHtml(e.desc)}</span>
+    <div class="expense-row">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" class="expense-checkbox exp-check-${car.id}" value="${e.id}">
+        <span>${escapeHtml(e.desc)}</span>
+      </div>
       <span class="amt">${fmt(e.amount)}</span>
     </div>
   `).join('');
 
   const headerHtml = `
-    <div style="display:flex; align-items:center; justify-style:space-between; margin-bottom:8px;">
+    <div class="expenses-header">
       <label style="font-size:12px; cursor:pointer; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
         <input type="checkbox" class="expense-checkbox" onchange="toggleSelectAllExpenses('${car.id}', this.checked)"> Seleccionar todos
       </label>
@@ -329,7 +348,7 @@ function render(){
       <div class="car-head ${isOpen?'is-open':''}" onclick="toggleCar('${car.id}')">
         <div class="car-title">
           <span class="name">${escapeHtml(car.name)}</span>
-          <span class="badge ${car.sold?'sold':'repair'}">${car.sold?'Vendido':'En Reparación'}</span>
+          <span class="badge ${car.sold?'sold':'repair'}">${car.sold?'VENDIDO':'EN REPARACIÓN'}</span>
           ${!car.sold ? `<span class="days-tag">${days} días transcurridos</span>` : ''}
         </div>
         <div class="car-nums">
@@ -368,7 +387,7 @@ function render(){
           ${!car.sold ? `
             <button class="btn small" onclick="openSellModal('${car.id}')">Marcar como Vendido</button>
           ` : `
-            <div style="font-size:13px;color:var(--text-secondary);">Vendido por: <strong>${fmt(car.salePrice)}</strong></div>
+            <div style="font-size:13px;color:var(--text-secondary);">Vendido por: <strong style="color:#fff">${fmt(car.salePrice)}</strong></div>
           `}
         </div>
 
@@ -378,7 +397,7 @@ function render(){
   }).join('');
 }
 
-// 🔘 Seleccionar / Deseleccionar todos
+// 🔘 Seleccionar / Deseleccionar todos los checkboxes de un carro
 function toggleSelectAllExpenses(carId, isChecked){
   const checkboxes = document.querySelectorAll(`.exp-check-${carId}`);
   checkboxes.forEach(cb => cb.checked = isChecked);
@@ -399,13 +418,13 @@ async function deleteSelectedExpenses(carId){
 
   if(!confirm(`¿Deseas eliminar los ${selectedIds.length} gastos seleccionados?`)) return;
 
-  // 1. Filtrar los gastos en memoria
+  // 1. Filtrar en memoria
   car.expenses = car.expenses.filter(e => !selectedIds.includes(e.id));
 
-  // 2. Actualizar interfaz al instante
+  // 2. Actualizar UI al instante
   updateSingleCarUI(carId);
 
-  // 3. Enviar un único envío seguro a la nube
+  // 3. Enviar 1 solo request a Google Sheets
   await callGoogleAppsScript('saveCar', { car });
 }
 
