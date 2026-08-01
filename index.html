@@ -397,9 +397,10 @@ async function loadFromSheet(){
 }
 
 async function saveCar(car){
+  render(); // Actualiza la pantalla de inmediato para mostrar los cambios
   const result = await callGoogleAppsScript('saveCar', {car});
-  if(result){
-    render();
+  if(!result){
+    showStatus('Error al guardar en Google Sheets, revisa tu conexión', 'error');
   }
 }
 
@@ -553,6 +554,9 @@ function attachDynamicListeners(){
       const car = cars.find(c=>c.id===id);
       car.expenses = car.expenses || [];
       car.expenses.push({id: 'e'+Date.now(), desc, amount: amt});
+      
+      openCarId = id; // Mantiene la tarjeta desplegada al añadir gasto
+      
       descInput.value = '';
       amtInput.value = '';
       saveCar(car);
@@ -564,6 +568,7 @@ function attachDynamicListeners(){
       const [carId, expId] = el.getAttribute('data-del-expense').split('|');
       const car = cars.find(c=>c.id===carId);
       car.expenses = (car.expenses||[]).filter(e=>e.id!==expId);
+      openCarId = carId;
       saveCar(car);
     });
   });
@@ -589,6 +594,7 @@ function attachDynamicListeners(){
       car.sold = true;
       car.salePrice = price;
       car.saleDate = date;
+      openCarId = id;
       saveCar(car);
     });
   });
@@ -636,6 +642,7 @@ document.getElementById('btn-save-car').addEventListener('click', ()=>{
     expenses: [], sold:false, salePrice:null, saleDate:null
   };
   cars.push(car);
+  openCarId = car.id;
   saveCar(car);
   closeModal();
 });
