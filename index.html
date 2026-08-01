@@ -91,6 +91,17 @@
     background:var(--surface-hover);
     border-color:var(--text-secondary);
   }
+  .btn.small{padding:7px 14px;font-size:13px;border-radius:8px;}
+  .btn.danger-ghost{
+    background:transparent;
+    border:1px solid var(--border-strong);
+    color:var(--danger);
+    font-weight:500;
+  }
+  .btn.danger-ghost:hover{
+    background: var(--danger-bg);
+    border-color: var(--danger);
+  }
 
   .status{font-size:13px;font-weight:500;color:var(--text-muted);margin-top:6px;width:100%;}
   .status.error{color:var(--danger);}
@@ -124,8 +135,9 @@
     color: var(--text);
   }
   .metric .value.pos{color:var(--success-text);}
+  .metric .value.neg{color:var(--danger-text);}
 
-  /* Barra de Controles y Filtros */
+  /* Barra de Filtros y Búsqueda */
   .controls-bar{
     display:flex;
     justify-content:space-between;
@@ -133,12 +145,6 @@
     gap:12px;
     margin-bottom:20px;
     flex-wrap:wrap;
-  }
-  .filter-group{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
   }
   .filter-tabs{
     display:flex;
@@ -163,19 +169,16 @@
     background:var(--surface-2);
     color:var(--accent-text);
   }
-
-  select, input{
-    font-family:var(--font-sans);
-    font-size:13px;
-    padding:7px 12px;
-    border-radius:8px;
-    border:1px solid var(--border-strong);
-    background:var(--surface);
-    color:var(--text);
-    outline:none;
+  .search-box{
+    display:flex;
+    gap:8px;
+    flex:1;
+    max-width:320px;
   }
-  select:focus, input:focus{
-    border-color:var(--accent);
+  .search-box input{
+    width:100%;
+    padding:8px 12px;
+    font-size:13px;
   }
 
   /* Tarjeta Carro */
@@ -196,6 +199,12 @@
   .car-head:hover{background:var(--surface-2);}
   .car-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .car-title .name{font-weight:600;font-size:16px;color:var(--text);}
+  .arrow-icon{
+    font-size:12px;
+    color:var(--text-muted);
+    transition:transform 0.2s ease;
+  }
+  .car-head.is-open .arrow-icon{ transform: rotate(180deg); }
   
   /* Badges de Estado */
   .badge{
@@ -222,6 +231,9 @@
   }
 
   .car-nums{text-align:right;font-size:13.5px;color:var(--text-secondary);}
+  .car-nums .profit{font-size:14.5px;font-weight:700;color:var(--text);margin-top:2px;}
+  .car-nums .profit.pos{color:var(--success-text);}
+  .car-nums .profit.neg{color:var(--danger-text);}
 
   .car-body{
     border-top:1px solid var(--border);
@@ -247,6 +259,40 @@
   }
   .stage-selector label{font-size:13px;font-weight:600;color:var(--text-secondary);}
 
+  /* Lista de gastos */
+  .expenses-list{margin:14px 0;}
+  .expense-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;margin-bottom:8px;font-size:13.5px;
+  }
+  .expense-row .amt{font-weight:600;color:var(--accent-text);}
+  .expense-row button{
+    background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;
+  }
+  .expense-row button:hover{color:var(--danger);}
+
+  .multi-expenses-container{
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 14px;
+  }
+  .expense-input-row{display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;}
+  .expense-input-row input[type=text]{flex:2;min-width:140px;}
+  .expense-input-row input[type=number]{flex:1;min-width:90px;}
+
+  input, select{
+    font-family:var(--font-sans);
+    font-size:14px;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--text);
+  }
+
   .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
     backdrop-filter: blur(4px);
@@ -262,6 +308,18 @@
   .field label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;}
   .field input{width:100%;}
   .empty{text-align:center;padding:40px;color:var(--text-muted);background:var(--surface);border-radius:12px;}
+
+  .loading-overlay{
+    display:none;position:fixed;inset:0;background:rgba(18,19,22,0.8);
+    backdrop-filter: blur(2px);
+    align-items:center;justify-content:center;z-index:100;
+  }
+  .loading-overlay.show{display:flex;}
+  .spinner{
+    width:42px;height:42px;border:3px solid var(--border-strong);border-top-color:var(--accent);
+    border-radius:50%;animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -270,7 +328,7 @@
   <div class="masthead">
     <div>
       <h1>Control de carros</h1>
-      <p>Importación EE.UU. & El Salvador</p>
+      <p>Importación, Reparación y Venta</p>
     </div>
     <div class="masthead-btns">
       <button class="btn" id="btn-add-car">+ Agregar carro</button>
@@ -281,24 +339,15 @@
 
   <div class="metrics" id="metrics"></div>
 
-  <!-- Barra de Filtros -->
+  <!-- Barra de Filtros por Estado y Búsqueda -->
   <div class="controls-bar">
-    <div class="filter-group">
-      <!-- Filtro por Estado -->
-      <div class="filter-tabs">
-        <button class="tab-btn active" data-filter="all">Todos</button>
-        <button class="tab-btn" data-filter="active">En reparación</button>
-        <button class="tab-btn" data-filter="sold">Vendidos</button>
-      </div>
-
-      <!-- Filtro por Año -->
-      <select id="year-filter">
-        <option value="all">Todos los años</option>
-      </select>
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-filter="all">Todos</button>
+      <button class="tab-btn" data-filter="active">En reparación</button>
+      <button class="tab-btn" data-filter="sold">Vendidos</button>
     </div>
-
-    <div>
-      <input type="text" id="search-input" placeholder="🔍 Buscar vehículo...">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="🔍 Buscar por nombre/placa...">
     </div>
   </div>
 
@@ -311,16 +360,12 @@
   <div class="modal">
     <h2>Nuevo vehículo</h2>
     <div class="field">
-      <label>Vehículo (Ej: Nissan Rogue 2023)</label>
+      <label>Vehículo (Ej: Outlander Sport 2019)</label>
       <input type="text" id="new-name" placeholder="Marca Modelo Año">
     </div>
     <div class="field">
-      <label>Año del modelo</label>
-      <input type="number" id="new-year" placeholder="Ej: 2023" min="2000" max="2027">
-    </div>
-    <div class="field">
-      <label>Costo de Compra (USD)</label>
-      <input type="number" id="new-price" placeholder="0.00">
+      <label>Precio de Compra (USD)</label>
+      <input type="number" id="new-price" placeholder="0.00" step="0.01">
     </div>
     <div class="field">
       <label>Fecha de Compra</label>
@@ -333,34 +378,29 @@
   </div>
 </div>
 
-<script>
-let cars = [
-  { id: '1', name: 'Nissan Rogue 2023', year: 2023, purchasePrice: 12432.83, purchaseDate: '2026-07-02', stage: 'repair', sold: false, expenses: [] },
-  { id: '2', name: 'Civic 2019 Coupe', year: 2019, purchasePrice: 8899.38, purchaseDate: '2026-06-15', stage: 'pnc', sold: false, expenses: [] },
-  { id: '3', name: 'Nissan Rogue Sport 2020', year: 2020, purchasePrice: 9499.70, purchaseDate: '2026-04-10', stage: 'sold', sold: true, salePrice: 9799.70, expenses: [] },
-  { id: '4', name: 'Nissan Rogue 2020', year: 2020, purchasePrice: 7537.94, purchaseDate: '2026-03-01', stage: 'sold', sold: true, salePrice: 9150.00, expenses: [] }
-];
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+</div>
 
+<script>
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1b7dGmQh2DO0rs8pBH30xZbktf9MzqkvhSWHCuJo65x7FOOE63eFqY0YoeT2S7gLW4A/exec';
+
+let cars = [];
 let openCarId = null;
 let currentFilter = 'all';
-let selectedYear = 'all';
 let searchQuery = '';
 
+function showStatus(msg, type = 'info'){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+}
+
+function showLoading(show = true){
+  document.getElementById('loading-overlay').classList.toggle('show', show);
+}
+
 function fmt(n){ return '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-
-function populateYearFilter(){
-  const yearSelect = document.getElementById('year-filter');
-  // Extraer años únicos disponibles en los datos
-  const years = [...new Set(cars.map(c => c.year || extractYearFromName(c.name)).filter(Boolean))].sort((a,b)=>b-a);
-  
-  yearSelect.innerHTML = '<option value="all">Todos los años</option>' + 
-    years.map(y => `<option value="${y}" ${selectedYear == y ? 'selected':''}>Año ${y}</option>`).join('');
-}
-
-function extractYearFromName(name){
-  const match = name.match(/\b(20\d{2})\b/);
-  return match ? parseInt(match[0]) : null;
-}
 
 function calcDays(startDateStr){
   if(!startDateStr) return 0;
@@ -369,33 +409,105 @@ function calcDays(startDateStr){
   return Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24)); 
 }
 
-function render(){
-  populateYearFilter();
-  const list = document.getElementById('car-list');
+async function callGoogleAppsScript(action, data){
+  showLoading(true);
+  try{
+    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({action, data})
+    });
+    const result = await response.json();
+    showLoading(false);
+    if(result.success){
+      showStatus('Sincronizado con éxito', 'success');
+      return result;
+    }else{
+      showStatus('Error: ' + result.error, 'error');
+      return null;
+    }
+  }catch(e){
+    showLoading(false);
+    showStatus('Error de conexión', 'error');
+    console.error(e);
+    return null;
+  }
+}
+
+async function loadFromSheet(){
+  const result = await callGoogleAppsScript('getCars', {});
+  if(result && result.cars){
+    cars = result.cars;
+    render();
+  }
+}
+
+async function saveCar(car){
+  render();
+  await callGoogleAppsScript('saveCar', {car});
+}
+
+function carExpensesTotal(car){
+  return (car.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+}
+
+function carInvested(car){
+  return Number(car.purchasePrice||0) + carExpensesTotal(car);
+}
+
+function carProfit(car){
+  if(!car.sold) return null;
+  return Number(car.salePrice||0) - carInvested(car);
+}
+
+function renderMetrics(){
+  const activos = cars.filter(c=>!c.sold);
+  const vendidos = cars.filter(c=>c.sold);
   
+  const totalInvertidoActivo = activos.reduce((s,c)=>s+carInvested(c),0);
+  const gananciaTotal = vendidos.reduce((s,c)=>s+carProfit(c),0);
+
+  const el = document.getElementById('metrics');
+  el.innerHTML = `
+    <div class="metric">
+      <div class="label">Invertido (En Proceso)</div>
+      <div class="value">${fmt(totalInvertidoActivo)}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Carros activos</div>
+      <div class="value">${activos.length}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Carros vendidos</div>
+      <div class="value">${vendidos.length}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Ganancia total</div>
+      <div class="value ${gananciaTotal>=0?'pos':'neg'}">${fmt(gananciaTotal)}</div>
+    </div>
+  `;
+}
+
+function render(){
+  renderMetrics();
+  const list = document.getElementById('car-list');
+
   let filtered = cars.filter(c => {
-    // Filtro por estado
-    const matchesStatus = (currentFilter === 'all') ||
-                          (currentFilter === 'active' && !c.sold) ||
+    const matchesFilter = (currentFilter === 'all') || 
+                          (currentFilter === 'active' && !c.sold) || 
                           (currentFilter === 'sold' && c.sold);
-    
-    // Filtro por año
-    const carYear = c.year || extractYearFromName(c.name);
-    const matchesYear = (selectedYear === 'all') || (carYear == selectedYear);
-
-    // Búsqueda
     const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesStatus && matchesYear && matchesSearch;
+    return matchesFilter && matchesSearch;
   });
 
   if(filtered.length === 0){
-    list.innerHTML = `<div class="empty">No hay vehículos que coincidan con los filtros seleccionados.</div>`;
+    list.innerHTML = `<div class="empty">No se encontraron vehículos.</div>`;
     return;
   }
 
   list.innerHTML = filtered.map(car => {
     const days = calcDays(car.purchaseDate);
+    const invested = carInvested(car);
+    const profit = carProfit(car);
     const isOpen = openCarId === car.id;
     const stage = car.stage || (car.sold ? 'sold' : 'repair');
 
@@ -410,20 +522,22 @@ function render(){
 
     return `
     <div class="car">
-      <div class="car-head" onclick="toggleCar('${car.id}')">
+      <div class="car-head ${isOpen?'is-open':''}" onclick="toggleCar('${car.id}')">
         <div class="car-title">
-          <span class="name">${car.name}</span>
+          <span class="name">${escapeHtml(car.name)}</span>
           <span class="badge ${stageMap[stage].cls}">${stageMap[stage].label}</span>
-          ${!car.sold ? `<span class="days-tag">${days} días en proceso</span>` : ''}
+          ${!car.sold ? `<span class="days-tag">${days} días transcurridos</span>` : ''}
         </div>
         <div class="car-nums">
-          <div>Invertido: <strong>${fmt((car.purchasePrice||0) + (car.expenses||[]).reduce((s,e)=>s+e.amount,0))}</strong></div>
+          <div>Invertido: <strong>${fmt(invested)}</strong></div>
+          ${car.sold ? `<div class="profit ${profit>=0?'pos':'neg'}">Ganancia: ${fmt(profit)}</div>` : ''}
         </div>
+        <span class="arrow-icon">▼</span>
       </div>
 
       <div class="car-body ${isOpen?'open':''}">
         <div class="stage-selector">
-          <label>Cambiar Etapa:</label>
+          <label>Cambiar Etapa Actual:</label>
           <select onchange="updateStage('${car.id}', this.value)">
             <option value="transit" ${stage==='transit'?'selected':''}>🚢 En Tránsito</option>
             <option value="repair" ${stage==='repair'?'selected':''}>🛠️ En Taller</option>
@@ -433,25 +547,43 @@ function render(){
           </select>
         </div>
 
-        <div class="row"><span class="l">Año del modelo</span><span class="r">${car.year || extractYearFromName(car.name) || 'N/A'}</span></div>
         <div class="row"><span class="l">Fecha de Compra</span><span class="r">${car.purchaseDate||'—'}</span></div>
-        <div class="row"><span class="l">Costo de Compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
+        <div class="row"><span class="l">Precio de Compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
+        <div class="row"><span class="l">Gastos Adicionales</span><span class="r">${fmt(carExpensesTotal(car))}</span></div>
+
+        <div style="margin-top:16px;font-weight:600;font-size:13px;color:var(--text-secondary);">Detalle de Gastos:</div>
+        <div class="expenses-list">
+          ${(car.expenses||[]).map(e=>`
+            <div class="expense-row">
+              <span>${escapeHtml(e.desc)}</span>
+              <span class="amt">${fmt(e.amount)}</span>
+            </div>
+          `).join('') || '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>'}
+        </div>
       </div>
     </div>
     `;
   }).join('');
 }
 
-function toggleCar(id){ openCarId = openCarId === id ? null : id; render(); }
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function toggleCar(id){ 
+  openCarId = openCarId === id ? null : id; 
+  render(); 
+}
 
 function updateStage(id, newStage){
   const car = cars.find(c=>c.id===id);
   car.stage = newStage;
-  if(newStage === 'sold') car.sold = true;
-  render();
+  saveCar(car);
 }
 
-// Event Listeners Filtros
+// Filtros y Eventos
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -461,39 +593,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-document.getElementById('year-filter').addEventListener('change', (e) => {
-  selectedYear = e.target.value;
-  render();
-});
-
 document.getElementById('search-input').addEventListener('input', (e) => {
   searchQuery = e.target.value;
   render();
 });
 
+document.getElementById('btn-sync').onclick = loadFromSheet;
 document.getElementById('btn-add-car').onclick = () => document.getElementById('modal-overlay').classList.add('open');
 document.getElementById('btn-cancel').onclick = () => document.getElementById('modal-overlay').classList.remove('open');
 
 document.getElementById('btn-save-car').onclick = () => {
   const name = document.getElementById('new-name').value.trim();
-  const year = parseInt(document.getElementById('new-year').value);
   const price = parseFloat(document.getElementById('new-price').value);
   const date = document.getElementById('new-date').value;
 
-  if(!name || isNaN(price)){ alert('Ingresa nombre y precio válidos'); return; }
+  if(!name || isNaN(price)){ alert('Completa nombre y precio válidos'); return; }
 
-  cars.push({
+  const newCar = {
     id: 'c' + Date.now(),
-    name, year: year || extractYearFromName(name),
-    purchasePrice: price, purchaseDate: date,
+    name, purchasePrice: price, purchaseDate: date,
     stage: 'repair', sold: false, expenses: []
-  });
+  };
 
+  cars.push(newCar);
+  openCarId = newCar.id;
+  saveCar(newCar);
   document.getElementById('modal-overlay').classList.remove('open');
-  render();
 };
 
-render();
+loadFromSheet();
 </script>
 </body>
 </html>
