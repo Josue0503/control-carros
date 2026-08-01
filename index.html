@@ -99,7 +99,7 @@
     border-color: var(--danger);
   }
 
-  .status{font-size:13px;font-weight:500;color:var(--text-muted);margin-top:6px;width:100%;}
+  .status{font-size:13px;font-weight:500;color:var(--text-muted);margin-top:6px;width:100%;transition: all 0.3s;}
   .status.error{color:var(--danger);}
   .status.success{color:var(--success-text);}
 
@@ -275,18 +275,6 @@
   .field label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;}
   .field input{width:100%;}
   .empty{text-align:center;padding:40px;color:var(--text-muted);background:var(--surface);border-radius:12px;}
-
-  .loading-overlay{
-    display:none;position:fixed;inset:0;background:rgba(18,19,22,0.8);
-    backdrop-filter: blur(2px);
-    align-items:center;justify-content:center;z-index:100;
-  }
-  .loading-overlay.show{display:flex;}
-  .spinner{
-    width:42px;height:42px;border:3px solid var(--border-strong);border-top-color:var(--accent);
-    border-radius:50%;animation:spin 0.8s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -354,10 +342,6 @@
   </div>
 </div>
 
-<div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-</div>
-
 <script>
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1b7dGmQh2DO0rs8pBH30xZbktf9MzqkvhSWHCuJo65x7FOOE63eFqY0YoeT2S7gLW4A/exec';
 
@@ -372,10 +356,6 @@ function showStatus(msg, type = 'info'){
   el.className = 'status ' + type;
 }
 
-function showLoading(show = true){
-  document.getElementById('loading-overlay').classList.toggle('show', show);
-}
-
 function fmt(n){ return '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
 function calcDays(startDateStr){
@@ -386,47 +366,31 @@ function calcDays(startDateStr){
 }
 
 async function callGoogleAppsScript(action, data){
-  showLoading(true);
+  showStatus('Guardando...');
   try{
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({action, data})
     });
     const result = await response.json();
-    showLoading(false);
     if(result.success){
-      showStatus('Sincronizado con éxito', 'success');
+      showStatus('Sincronizado', 'success');
+      setTimeout(()=> showStatus(''), 2500);
       return result;
-    }else{
-      showStatus('Error: ' + result.error, 'error');
-      return null;
     }
   }catch(e){
-    showLoading(false);
-    showStatus('Error de conexión', 'error');
-    console.error(e);
-    return null;
+    showStatus('Error de sincronización', 'error');
   }
 }
 
 async function loadFromSheet(){
+  showStatus('Cargando...');
   const result = await callGoogleAppsScript('getCars', {});
   if(result && result.cars){
     cars = result.cars;
     render();
+    showStatus('');
   }
-}
-
-async function saveCar(car){
-  render();
-  await callGoogleAppsScript('saveCar', {car});
-}
-
-async function deleteCar(id){
-  if(!confirm('¿Seguro que deseas eliminar este vehículo?')) return;
-  cars = cars.filter(c => c.id !== id);
-  render();
-  await callGoogleAppsScript('deleteCar', {id});
 }
 
 function carExpensesTotal(car){
@@ -440,6 +404,48 @@ function carInvested(car){
 function carProfit(car){
   if(!car.sold) return null;
   return Number(car.salePrice||0) - carInvested(car);
+}
+
+function updateSingleCarUI(carId){
+  const car = cars.find(c => c.id === carId);
+  if(!car) return;
+
+  // 1. Actualizar números del encabezado sin cerrar la tarjeta
+  const cardNode = document.getElementById(`car-${carId}`);
+  if(cardNode){
+    const investedNode = cardNode.querySelector('.car-invested-val');
+    if(investedNode) investedNode.textContent = fmt(carInvested(car));
+
+    const expTotalNode = cardNode.querySelector('.car-exp-total-val');
+    if(expTotalNode) expTotalNode.textContent = fmt(carExpensesTotal(car));
+
+    // 2. Actualizar lista visual de gastos
+    const listNode = cardNode.querySelector('.expenses-list');
+    if(listNode){
+      listNode.innerHTML = (car.expenses||[]).map((e, idx)=>`
+        <div class="expense-row">
+          <span>${escapeHtml(e.desc)}</span>
+          <div>
+            <span class="amt">${fmt(e.amount)}</span>
+            <button onclick="removeExpense('${car.id}', ${idx})" title="Eliminar gasto">×</button>
+          </div>
+        </div>
+      `).join('') || '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>';
+    }
+
+    // 3. Limpiar los inputs
+    const inputsContainer = document.getElementById(`expenses-inputs-${carId}`);
+    if(inputsContainer){
+      inputsContainer.innerHTML = `
+        <div class="expense-input-row">
+          <input type="text" placeholder="Descripción" class="exp-desc">
+          <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
+        </div>`;
+    }
+  }
+
+  // 4. Actualizar tarjetas superiores de resumen
+  renderMetrics();
 }
 
 function renderMetrics(){
@@ -492,7 +498,7 @@ function render(){
     const isOpen = openCarId === car.id;
 
     return `
-    <div class="car">
+    <div class="car" id="car-${car.id}">
       <div class="car-head ${isOpen?'is-open':''}" onclick="toggleCar('${car.id}')">
         <div class="car-title">
           <span class="name">${escapeHtml(car.name)}</span>
@@ -500,7 +506,7 @@ function render(){
           ${!car.sold ? `<span class="days-tag">${days} días transcurridos</span>` : ''}
         </div>
         <div class="car-nums">
-          <div>Invertido: <strong>${fmt(invested)}</strong></div>
+          <div>Invertido: <strong class="car-invested-val">${fmt(invested)}</strong></div>
           ${car.sold ? `<div class="profit ${profit>=0?'pos':'neg'}">Ganancia: ${fmt(profit)}</div>` : ''}
         </div>
         <span class="arrow-icon">▼</span>
@@ -509,7 +515,7 @@ function render(){
       <div class="car-body ${isOpen?'open':''}">
         <div class="row"><span class="l">Fecha de Compra</span><span class="r">${car.purchaseDate||'—'}</span></div>
         <div class="row"><span class="l">Precio de Compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
-        <div class="row"><span class="l">Gastos Adicionales</span><span class="r">${fmt(carExpensesTotal(car))}</span></div>
+        <div class="row"><span class="l">Gastos Adicionales</span><span class="r car-exp-total-val">${fmt(carExpensesTotal(car))}</span></div>
 
         <div style="margin-top:16px;font-weight:600;font-size:13px;color:var(--text-secondary);">Detalle de Gastos:</div>
         <div class="expenses-list">
@@ -528,7 +534,7 @@ function render(){
           <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-secondary);">Cargar Gastos:</div>
           <div id="expenses-inputs-${car.id}">
             <div class="expense-input-row">
-              <input type="text" placeholder="Descripción (Ej: Taller / Grúa)" class="exp-desc">
+              <input type="text" placeholder="Descripción" class="exp-desc">
               <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
             </div>
           </div>
@@ -593,16 +599,25 @@ function saveExpenses(carId){
   });
 
   if(added){
-    saveCar(car);
+    updateSingleCarUI(carId); // ⚡ Actualiza al instante solo esta tarjeta
+    callGoogleAppsScript('saveCar', {car}); // Guarda en segundo plano
   }else{
-    alert('Ingresa al menos una descripción y un monto válido.');
+    alert('Ingresa al menos una descripción y monto válidos.');
   }
 }
 
 function removeExpense(carId, idx){
   const car = cars.find(c=>c.id===carId);
   car.expenses.splice(idx, 1);
-  saveCar(car);
+  updateSingleCarUI(carId); // ⚡ Elimina el elemento sin redibujar todo
+  callGoogleAppsScript('saveCar', {car}); // Guarda en segundo plano
+}
+
+async function deleteCar(id){
+  if(!confirm('¿Seguro que deseas eliminar este vehículo?')) return;
+  cars = cars.filter(c => c.id !== id);
+  render();
+  callGoogleAppsScript('deleteCar', {id});
 }
 
 function openSellModal(id){
@@ -615,17 +630,17 @@ document.getElementById('btn-cancel-sell').onclick = () => document.getElementBy
 
 document.getElementById('btn-confirm-sell').onclick = () => {
   const price = parseFloat(document.getElementById('sell-price').value);
-  if(isNaN(price) || price <= 0){ alert('Ingresa un precio de venta válido.'); return; }
+  if(isNaN(price) || price <= 0){ alert('Ingresa un precio válido.'); return; }
   
   const car = cars.find(c=>c.id===carToSellId);
   car.sold = true;
   car.salePrice = price;
   
   document.getElementById('modal-sell').classList.remove('open');
-  saveCar(car);
+  render();
+  callGoogleAppsScript('saveCar', {car});
 };
 
-// Filtros
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -654,7 +669,8 @@ document.getElementById('btn-save-car').onclick = () => {
 
   cars.push(newCar);
   openCarId = newCar.id;
-  saveCar(newCar);
+  render();
+  callGoogleAppsScript('saveCar', {car: newCar});
   document.getElementById('modal-overlay').classList.remove('open');
 };
 
