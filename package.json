@@ -1,0 +1,17 @@
+{
+  "name": "control-carros",
+  "version": "1.0.0",
+  "description": "Aplicación para trackear compra, reparación y venta de carros con sincronización a Google Sheets",
+  "author": "Alfaro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alfarojasson/control-carros"
+  },
+  "keywords": [
+    "carros",
+    "tracking",
+    "google-sheets",
+    "web-app"
+  ]
+}
