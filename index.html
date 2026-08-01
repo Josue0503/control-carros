@@ -366,7 +366,7 @@ function calcDays(startDateStr){
 }
 
 async function callGoogleAppsScript(action, data){
-  showStatus('Guardando...');
+  showStatus('Cargando datos, por favor espere...');
   try{
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
       method: 'POST',
