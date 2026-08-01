@@ -444,28 +444,29 @@ function carProfit(car){
 }
 
 function renderMetrics(){
-  const totalInvertido = cars.reduce((s,c)=>s+carInvested(c),0);
   const activos = cars.filter(c=>!c.sold);
   const vendidos = cars.filter(c=>c.sold);
+  
+  // AHORA: Invertido actual toma únicamente los carros activos (no el historial vendido)
+  const totalInvertidoActivo = activos.reduce((s,c)=>s+carInvested(c),0);
   const gananciaTotal = vendidos.reduce((s,c)=>s+carProfit(c),0);
-  const capitalActivo = activos.reduce((s,c)=>s+carInvested(c),0);
 
   const el = document.getElementById('metrics');
   el.innerHTML = `
     <div class="metric">
-      <div class="label">Total invertido</div>
-      <div class="value">${fmt(totalInvertido)}</div>
+      <div class="label">Invertido (Carros Activos)</div>
+      <div class="value">${fmt(totalInvertidoActivo)}</div>
     </div>
     <div class="metric">
       <div class="label">Carros activos</div>
       <div class="value">${activos.length}</div>
     </div>
     <div class="metric">
-      <div class="label">Capital en activos</div>
-      <div class="value">${fmt(capitalActivo)}</div>
+      <div class="label">Carros vendidos</div>
+      <div class="value">${vendidos.length}</div>
     </div>
     <div class="metric">
-      <div class="label">Ganancia (vendidos)</div>
+      <div class="label">Ganancia total</div>
       <div class="value ${gananciaTotal>=0?'pos':'neg'}">${fmt(gananciaTotal)}</div>
     </div>
   `;
@@ -568,7 +569,6 @@ function attachDynamicListeners(){
     });
   });
 
-  // Agregar nueva fila de entrada de gasto
   document.querySelectorAll('[data-add-row]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
@@ -586,7 +586,6 @@ function attachDynamicListeners(){
     });
   });
 
-  // Guardar todos los gastos de las filas
   document.querySelectorAll('[data-save-expenses]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
