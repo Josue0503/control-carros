@@ -25,10 +25,6 @@
     --success-bg: rgba(34, 197, 94, 0.12);
     --success-text: #4ADE80;
 
-    --warning: #F97316;
-    --warning-bg: rgba(249, 115, 22, 0.12);
-    --warning-text: #FB923C;
-
     --danger: #EF4444;
     --danger-bg: rgba(239, 68, 68, 0.12);
     --danger-text: #F87171;
@@ -137,15 +133,7 @@
   .metric .value.pos{color:var(--success-text);}
   .metric .value.neg{color:var(--danger-text);}
 
-  /* Barra de Filtros y Búsqueda */
-  .controls-bar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:12px;
-    margin-bottom:20px;
-    flex-wrap:wrap;
-  }
+  /* Filtros */
   .filter-tabs{
     display:flex;
     background:var(--surface);
@@ -153,6 +141,8 @@
     border-radius:10px;
     padding:4px;
     gap:4px;
+    margin-bottom:20px;
+    width:fit-content;
   }
   .tab-btn{
     background:transparent;
@@ -168,17 +158,6 @@
   .tab-btn.active{
     background:var(--surface-2);
     color:var(--accent-text);
-  }
-  .search-box{
-    display:flex;
-    gap:8px;
-    flex:1;
-    max-width:320px;
-  }
-  .search-box input{
-    width:100%;
-    padding:8px 12px;
-    font-size:13px;
   }
 
   /* Tarjeta Carro */
@@ -206,21 +185,16 @@
   }
   .car-head.is-open .arrow-icon{ transform: rotate(180deg); }
   
-  /* Badges de Estado */
   .badge{
     font-size:11px;
     font-weight:700;
-    padding:4px 10px;
+    padding:3px 8px;
     border-radius:20px;
     text-transform: uppercase;
   }
-  .badge.transit{background:rgba(59, 130, 246, 0.15);color:#60A5FA;border:1px solid rgba(59, 130, 246, 0.3);}
   .badge.repair{background:var(--accent-bg);color:var(--accent-text);border:1px solid rgba(234,179,8,0.3);}
-  .badge.pnc{background:rgba(236, 72, 153, 0.15);color:#F472B6;border:1px solid rgba(236, 72, 153, 0.3);}
-  .badge.paperwork{background:var(--warning-bg);color:var(--warning-text);border:1px solid rgba(249, 115, 22, 0.3);}
-  .badge.ready{background:rgba(168, 85, 247, 0.15);color:#C084FC;border:1px solid rgba(168, 85, 247, 0.3);}
   .badge.sold{background:var(--success-bg);color:var(--success-text);border:1px solid rgba(34,197,94,0.3);}
-  
+
   .days-tag{
     font-size:12px;
     font-weight:600;
@@ -247,19 +221,6 @@
   .row .l{color:var(--text-secondary);}
   .row .r{font-weight:600;color:var(--text);}
 
-  .stage-selector{
-    display:flex;
-    gap:8px;
-    margin: 14px 0;
-    align-items:center;
-    flex-wrap:wrap;
-    background:var(--surface);
-    padding:10px;
-    border-radius:8px;
-  }
-  .stage-selector label{font-size:13px;font-weight:600;color:var(--text-secondary);}
-
-  /* Lista de gastos */
   .expenses-list{margin:14px 0;}
   .expense-row{
     display:flex;justify-content:space-between;align-items:center;
@@ -283,7 +244,7 @@
   .expense-input-row input[type=text]{flex:2;min-width:140px;}
   .expense-input-row input[type=number]{flex:1;min-width:90px;}
 
-  input, select{
+  input{
     font-family:var(--font-sans);
     font-size:14px;
     padding:8px 12px;
@@ -291,6 +252,12 @@
     border:1px solid var(--border-strong);
     background:var(--surface);
     color:var(--text);
+  }
+
+  .actions-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
+    flex-wrap:wrap;gap:10px;
   }
 
   .modal-overlay{
@@ -339,16 +306,10 @@
 
   <div class="metrics" id="metrics"></div>
 
-  <!-- Barra de Filtros por Estado y Búsqueda -->
-  <div class="controls-bar">
-    <div class="filter-tabs">
-      <button class="tab-btn active" data-filter="all">Todos</button>
-      <button class="tab-btn" data-filter="active">En reparación</button>
-      <button class="tab-btn" data-filter="sold">Vendidos</button>
-    </div>
-    <div class="search-box">
-      <input type="text" id="search-input" placeholder="🔍 Buscar por nombre/placa...">
-    </div>
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">Todos</button>
+    <button class="tab-btn" data-filter="active">En reparación</button>
+    <button class="tab-btn" data-filter="sold">Vendidos</button>
   </div>
 
   <div id="car-list"></div>
@@ -360,8 +321,8 @@
   <div class="modal">
     <h2>Nuevo vehículo</h2>
     <div class="field">
-      <label>Vehículo (Ej: Outlander Sport 2019)</label>
-      <input type="text" id="new-name" placeholder="Marca Modelo Año">
+      <label>Vehículo (Marca / Modelo / Año)</label>
+      <input type="text" id="new-name" placeholder="Ej: Nissan Rogue 2023">
     </div>
     <div class="field">
       <label>Precio de Compra (USD)</label>
@@ -378,6 +339,21 @@
   </div>
 </div>
 
+<!-- Modal Venta -->
+<div class="modal-overlay" id="modal-sell">
+  <div class="modal">
+    <h2>Marcar como Vendido</h2>
+    <div class="field">
+      <label>Precio de Venta Final (USD)</label>
+      <input type="number" id="sell-price" placeholder="0.00" step="0.01">
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+      <button class="btn secondary" id="btn-cancel-sell">Cancelar</button>
+      <button class="btn" id="btn-confirm-sell">Confirmar Venta</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
 </div>
@@ -388,7 +364,7 @@ const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1b7dGm
 let cars = [];
 let openCarId = null;
 let currentFilter = 'all';
-let searchQuery = '';
+let carToSellId = null;
 
 function showStatus(msg, type = 'info'){
   const el = document.getElementById('status');
@@ -446,6 +422,13 @@ async function saveCar(car){
   await callGoogleAppsScript('saveCar', {car});
 }
 
+async function deleteCar(id){
+  if(!confirm('¿Seguro que deseas eliminar este vehículo?')) return;
+  cars = cars.filter(c => c.id !== id);
+  render();
+  await callGoogleAppsScript('deleteCar', {id});
+}
+
 function carExpensesTotal(car){
   return (car.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
 }
@@ -492,15 +475,13 @@ function render(){
   const list = document.getElementById('car-list');
 
   let filtered = cars.filter(c => {
-    const matchesFilter = (currentFilter === 'all') || 
-                          (currentFilter === 'active' && !c.sold) || 
-                          (currentFilter === 'sold' && c.sold);
-    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    if(currentFilter === 'active') return !c.sold;
+    if(currentFilter === 'sold') return c.sold;
+    return true;
   });
 
   if(filtered.length === 0){
-    list.innerHTML = `<div class="empty">No se encontraron vehículos.</div>`;
+    list.innerHTML = `<div class="empty">No hay vehículos registrados en este estado.</div>`;
     return;
   }
 
@@ -509,23 +490,13 @@ function render(){
     const invested = carInvested(car);
     const profit = carProfit(car);
     const isOpen = openCarId === car.id;
-    const stage = car.stage || (car.sold ? 'sold' : 'repair');
-
-    const stageMap = {
-      'transit': {label: '🚢 En Tránsito', cls: 'transit'},
-      'repair': {label: '🛠️ En Taller', cls: 'repair'},
-      'pnc': {label: '📋 Experticia PNC', cls: 'pnc'},
-      'paperwork': {label: '📄 En Placas', cls: 'paperwork'},
-      'ready': {label: '✨ Listo para Venta', cls: 'ready'},
-      'sold': {label: '✅ Vendido', cls: 'sold'}
-    };
 
     return `
     <div class="car">
       <div class="car-head ${isOpen?'is-open':''}" onclick="toggleCar('${car.id}')">
         <div class="car-title">
           <span class="name">${escapeHtml(car.name)}</span>
-          <span class="badge ${stageMap[stage].cls}">${stageMap[stage].label}</span>
+          <span class="badge ${car.sold?'sold':'repair'}">${car.sold?'Vendido':'En Reparación'}</span>
           ${!car.sold ? `<span class="days-tag">${days} días transcurridos</span>` : ''}
         </div>
         <div class="car-nums">
@@ -536,30 +507,46 @@ function render(){
       </div>
 
       <div class="car-body ${isOpen?'open':''}">
-        <div class="stage-selector">
-          <label>Cambiar Etapa Actual:</label>
-          <select onchange="updateStage('${car.id}', this.value)">
-            <option value="transit" ${stage==='transit'?'selected':''}>🚢 En Tránsito</option>
-            <option value="repair" ${stage==='repair'?'selected':''}>🛠️ En Taller</option>
-            <option value="pnc" ${stage==='pnc'?'selected':''}>📋 Experticia PNC</option>
-            <option value="paperwork" ${stage==='paperwork'?'selected':''}>📄 En Placas / Sertracen</option>
-            <option value="ready" ${stage==='ready'?'selected':''}>✨ Listo para Venta</option>
-          </select>
-        </div>
-
         <div class="row"><span class="l">Fecha de Compra</span><span class="r">${car.purchaseDate||'—'}</span></div>
         <div class="row"><span class="l">Precio de Compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
         <div class="row"><span class="l">Gastos Adicionales</span><span class="r">${fmt(carExpensesTotal(car))}</span></div>
 
         <div style="margin-top:16px;font-weight:600;font-size:13px;color:var(--text-secondary);">Detalle de Gastos:</div>
         <div class="expenses-list">
-          ${(car.expenses||[]).map(e=>`
+          ${(car.expenses||[]).map((e, idx)=>`
             <div class="expense-row">
               <span>${escapeHtml(e.desc)}</span>
-              <span class="amt">${fmt(e.amount)}</span>
+              <div>
+                <span class="amt">${fmt(e.amount)}</span>
+                <button onclick="removeExpense('${car.id}', ${idx})" title="Eliminar gasto">×</button>
+              </div>
             </div>
           `).join('') || '<div style="font-size:12px;color:var(--text-muted);">Sin gastos cargados aún.</div>'}
         </div>
+
+        <div class="multi-expenses-container">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-secondary);">Cargar Gastos:</div>
+          <div id="expenses-inputs-${car.id}">
+            <div class="expense-input-row">
+              <input type="text" placeholder="Descripción (Ej: Taller / Grúa)" class="exp-desc">
+              <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn secondary small" onclick="addExpenseRow('${car.id}')">+ Otra fila</button>
+            <button class="btn small" onclick="saveExpenses('${car.id}')">Guardar Gastos</button>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn danger-ghost small" onclick="deleteCar('${car.id}')">Eliminar Carro</button>
+          ${!car.sold ? `
+            <button class="btn small" onclick="openSellModal('${car.id}')">Marcar como Vendido</button>
+          ` : `
+            <div style="font-size:13px;color:var(--text-secondary);">Vendido por: <strong>${fmt(car.salePrice)}</strong></div>
+          `}
+        </div>
+
       </div>
     </div>
     `;
@@ -577,13 +564,68 @@ function toggleCar(id){
   render(); 
 }
 
-function updateStage(id, newStage){
-  const car = cars.find(c=>c.id===id);
-  car.stage = newStage;
+function addExpenseRow(carId){
+  const container = document.getElementById(`expenses-inputs-${carId}`);
+  const row = document.createElement('div');
+  row.className = 'expense-input-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Descripción" class="exp-desc">
+    <input type="number" placeholder="Monto" class="exp-amt" step="0.01">
+  `;
+  container.appendChild(row);
+}
+
+function saveExpenses(carId){
+  const car = cars.find(c=>c.id===carId);
+  const container = document.getElementById(`expenses-inputs-${carId}`);
+  const descs = container.querySelectorAll('.exp-desc');
+  const amts = container.querySelectorAll('.exp-amt');
+
+  let added = false;
+  descs.forEach((d, i)=>{
+    const desc = d.value.trim();
+    const amount = parseFloat(amts[i].value);
+    if(desc && !isNaN(amount) && amount > 0){
+      car.expenses = car.expenses || [];
+      car.expenses.push({desc, amount});
+      added = true;
+    }
+  });
+
+  if(added){
+    saveCar(car);
+  }else{
+    alert('Ingresa al menos una descripción y un monto válido.');
+  }
+}
+
+function removeExpense(carId, idx){
+  const car = cars.find(c=>c.id===carId);
+  car.expenses.splice(idx, 1);
   saveCar(car);
 }
 
-// Filtros y Eventos
+function openSellModal(id){
+  carToSellId = id;
+  document.getElementById('sell-price').value = '';
+  document.getElementById('modal-sell').classList.add('open');
+}
+
+document.getElementById('btn-cancel-sell').onclick = () => document.getElementById('modal-sell').classList.remove('open');
+
+document.getElementById('btn-confirm-sell').onclick = () => {
+  const price = parseFloat(document.getElementById('sell-price').value);
+  if(isNaN(price) || price <= 0){ alert('Ingresa un precio de venta válido.'); return; }
+  
+  const car = cars.find(c=>c.id===carToSellId);
+  car.sold = true;
+  car.salePrice = price;
+  
+  document.getElementById('modal-sell').classList.remove('open');
+  saveCar(car);
+};
+
+// Filtros
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -591,11 +633,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     currentFilter = btn.getAttribute('data-filter');
     render();
   });
-});
-
-document.getElementById('search-input').addEventListener('input', (e) => {
-  searchQuery = e.target.value;
-  render();
 });
 
 document.getElementById('btn-sync').onclick = loadFromSheet;
@@ -612,7 +649,7 @@ document.getElementById('btn-save-car').onclick = () => {
   const newCar = {
     id: 'c' + Date.now(),
     name, purchasePrice: price, purchaseDate: date,
-    stage: 'repair', sold: false, expenses: []
+    sold: false, expenses: []
   };
 
   cars.push(newCar);
