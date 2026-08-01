@@ -216,8 +216,28 @@
   }
   .expense-row button:hover{color:var(--danger);}
 
-  /* Formulario Inline & Inputs */
-  .inline-form{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  /* Formulario Múltiples Gastos */
+  .multi-expenses-container{
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 14px;
+  }
+  .expense-input-row{
+    display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;
+  }
+  .expense-input-row input[type=text]{flex:2;min-width:140px;}
+  .expense-input-row input[type=number]{flex:1;min-width:90px;}
+  .btn-remove-row{
+    background:transparent;border:none;color:var(--text-muted);
+    font-size:20px;cursor:pointer;padding:0 6px;line-height:1;
+  }
+  .btn-remove-row:hover{color:var(--danger);}
+  .expense-actions-bar{
+    display:flex;gap:10px;margin-top:12px;justify-content:space-between;flex-wrap:wrap;
+  }
+
   input, select{
     font-family:var(--font-sans);
     font-size:14px;
@@ -233,8 +253,6 @@
     border-color:var(--accent);
     box-shadow: 0 0 0 2px var(--accent-bg);
   }
-  .inline-form input[type=text]{flex:2;min-width:160px;}
-  .inline-form input[type=number]{flex:1;min-width:110px;}
 
   .car-actions{display:flex;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;}
 
@@ -397,7 +415,7 @@ async function loadFromSheet(){
 }
 
 async function saveCar(car){
-  render(); // Actualiza la pantalla de inmediato para mostrar los cambios
+  render();
   const result = await callGoogleAppsScript('saveCar', {car});
   if(!result){
     showStatus('Error al guardar en Google Sheets, revisa tu conexión', 'error');
@@ -501,10 +519,20 @@ function render(){
             </div>
           `).join('') || '<div style="font-size:13px;color:var(--text-muted);">Sin gastos todavía.</div>'}
         </div>
-        <div class="inline-form">
-          <input type="text" placeholder="Descripción del gasto" id="exp-desc-${car.id}">
-          <input type="number" placeholder="Monto" min="0" step="0.01" id="exp-amt-${car.id}">
-          <button class="btn small" data-add-expense="${car.id}">Agregar gasto</button>
+
+        <div class="multi-expenses-container">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-secondary);">Agregar nuevos gastos:</div>
+          <div id="exp-rows-${car.id}">
+            <div class="expense-input-row">
+              <input type="text" placeholder="Ej: Mecánico / Repuesto" class="exp-desc">
+              <input type="number" placeholder="Monto" min="0" step="0.01" class="exp-amt">
+              <button class="btn-remove-row" style="visibility:hidden;">&times;</button>
+            </div>
+          </div>
+          <div class="expense-actions-bar">
+            <button class="btn secondary small" data-add-row="${car.id}">+ Otro gasto</button>
+            <button class="btn small" data-save-expenses="${car.id}">Guardar gastos</button>
+          </div>
         </div>
 
         <div class="car-actions">
@@ -539,29 +567,69 @@ function attachDynamicListeners(){
       render();
     });
   });
-  document.querySelectorAll('[data-add-expense]').forEach(el=>{
+
+  // Agregar nueva fila de entrada de gasto
+  document.querySelectorAll('[data-add-row]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
-      const id = el.getAttribute('data-add-expense');
-      const descInput = document.getElementById('exp-desc-'+id);
-      const amtInput = document.getElementById('exp-amt-'+id);
-      const desc = descInput.value.trim();
-      const amt = parseFloat(amtInput.value);
-      if(!desc || isNaN(amt)){
-        showStatus('Completa descripción y monto', 'error');
+      const id = el.getAttribute('data-add-row');
+      const container = document.getElementById('exp-rows-'+id);
+      const row = document.createElement('div');
+      row.className = 'expense-input-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Ej: Mecánico / Repuesto" class="exp-desc">
+        <input type="number" placeholder="Monto" min="0" step="0.01" class="exp-amt">
+        <button class="btn-remove-row" onclick="this.parentElement.remove()">&times;</button>
+      `;
+      container.appendChild(row);
+      row.querySelector('input').focus();
+    });
+  });
+
+  // Guardar todos los gastos de las filas
+  document.querySelectorAll('[data-save-expenses]').forEach(el=>{
+    el.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const id = el.getAttribute('data-save-expenses');
+      const container = document.getElementById('exp-rows-'+id);
+      const rows = container.querySelectorAll('.expense-input-row');
+      
+      const newExpenses = [];
+      let valid = true;
+
+      rows.forEach(row=>{
+        const desc = row.querySelector('.exp-desc').value.trim();
+        const amtVal = row.querySelector('.exp-amt').value;
+        const amt = parseFloat(amtVal);
+
+        if(desc || !isNaN(amt)){
+          if(!desc || isNaN(amt)){
+            valid = false;
+          } else {
+            newExpenses.push({id: 'e' + Date.now() + Math.random().toString(36).substr(2,4), desc, amount: amt});
+          }
+        }
+      });
+
+      if(!valid){
+        showStatus('Verifica que todos los gastos ingresados tengan descripción y monto válido', 'error');
         return;
       }
+
+      if(newExpenses.length === 0){
+        showStatus('Ingresa al menos un gasto', 'error');
+        return;
+      }
+
       const car = cars.find(c=>c.id===id);
       car.expenses = car.expenses || [];
-      car.expenses.push({id: 'e'+Date.now(), desc, amount: amt});
+      car.expenses.push(...newExpenses);
       
-      openCarId = id; // Mantiene la tarjeta desplegada al añadir gasto
-      
-      descInput.value = '';
-      amtInput.value = '';
+      openCarId = id;
       saveCar(car);
     });
   });
+
   document.querySelectorAll('[data-del-expense]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
@@ -572,6 +640,7 @@ function attachDynamicListeners(){
       saveCar(car);
     });
   });
+
   document.querySelectorAll('[data-mark-sold]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
@@ -580,6 +649,7 @@ function attachDynamicListeners(){
       form.style.display = form.style.display === 'none' ? 'flex' : 'none';
     });
   });
+
   document.querySelectorAll('[data-confirm-sold]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
@@ -598,6 +668,7 @@ function attachDynamicListeners(){
       saveCar(car);
     });
   });
+
   document.querySelectorAll('[data-del-car]').forEach(el=>{
     el.addEventListener('click', (ev)=>{
       ev.stopPropagation();
