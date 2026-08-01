@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Carros</title>
+<title>Control de Carros - Importación</title>
 <style>
   :root{
     --bg: #121316;
@@ -16,18 +16,19 @@
     --text-secondary: #9CA3AF;
     --text-muted: #6B7280;
     
-    /* Acentos Gold / Amber Premium */
     --accent: #EAB308;
     --accent-hover: #CA8A04;
     --accent-bg: rgba(234, 179, 8, 0.12);
     --accent-text: #FACC15;
 
-    /* Acentos Verde Éxito */
     --success: #22C55E;
     --success-bg: rgba(34, 197, 94, 0.12);
     --success-text: #4ADE80;
 
-    /* Acentos Rojo Peligro */
+    --warning: #F97316;
+    --warning-bg: rgba(249, 115, 22, 0.12);
+    --warning-text: #FB923C;
+
     --danger: #EF4444;
     --danger-bg: rgba(239, 68, 68, 0.12);
     --danger-text: #F87171;
@@ -51,7 +52,7 @@
 
   .masthead{
     display:flex;justify-content:space-between;align-items:flex-end;
-    margin-bottom:32px;flex-wrap:wrap;gap:16px;
+    margin-bottom:28px;flex-wrap:wrap;gap:16px;
   }
   .masthead h1{
     font-size:28px;
@@ -75,7 +76,6 @@
     color:#121316;
     cursor:pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(234, 179, 8, 0.15);
   }
   .btn:hover{
     background:var(--accent-hover);
@@ -86,27 +86,13 @@
     background:var(--surface-2);
     color:var(--text);
     border:1px solid var(--border-strong);
-    box-shadow: none;
   }
   .btn.secondary:hover{
     background:var(--surface-hover);
     border-color:var(--text-secondary);
   }
-  .btn.small{padding:7px 14px;font-size:13px;border-radius:8px;}
-  .btn.danger-ghost{
-    background:transparent;
-    border:1px solid var(--border-strong);
-    color:var(--danger);
-    font-weight:500;
-  }
-  .btn.danger-ghost:hover{
-    background: var(--danger-bg);
-    border-color: var(--danger);
-  }
-  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
 
   .status{font-size:13px;font-weight:500;color:var(--text-muted);margin-top:6px;width:100%;}
-  .status.loading{color:var(--accent-text);}
   .status.error{color:var(--danger);}
   .status.success{color:var(--success-text);}
 
@@ -115,14 +101,13 @@
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
     gap:14px;
-    margin-bottom:36px;
+    margin-bottom:28px;
   }
   .metric{
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius);
     padding:18px 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
   .metric .label{
     font-size:12px;
@@ -139,15 +124,58 @@
     color: var(--text);
   }
   .metric .value.pos{color:var(--success-text);}
-  .metric .value.neg{color:var(--danger-text);}
 
-  .section-title{
-    font-size:12px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    color:var(--text-muted);
-    margin: 12px 0 16px;
+  /* Barra de Controles y Filtros */
+  .controls-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .filter-group{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .filter-tabs{
+    display:flex;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px;
+    gap:4px;
+  }
+  .tab-btn{
+    background:transparent;
+    border:none;
+    color:var(--text-secondary);
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:600;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .tab-btn.active{
+    background:var(--surface-2);
+    color:var(--accent-text);
+  }
+
+  select, input{
+    font-family:var(--font-sans);
+    font-size:13px;
+    padding:7px 12px;
+    border-radius:8px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--text);
+    outline:none;
+  }
+  select:focus, input:focus{
+    border-color:var(--accent);
   }
 
   /* Tarjeta Carro */
@@ -155,11 +183,9 @@
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius);
-    margin-bottom:16px;
+    margin-bottom:14px;
     overflow:hidden;
-    transition: border-color 0.2s ease;
   }
-  .car:hover{ border-color: var(--border-strong); }
   
   .car-head{
     display:flex;justify-content:space-between;align-items:center;
@@ -168,25 +194,34 @@
     transition: background 0.2s ease;
   }
   .car-head:hover{background:var(--surface-2);}
-  .car-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .car-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .car-title .name{font-weight:600;font-size:16px;color:var(--text);}
   
-  /* Badges */
+  /* Badges de Estado */
   .badge{
     font-size:11px;
     font-weight:700;
     padding:4px 10px;
     border-radius:20px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
-  .badge.active{background:var(--accent-bg);color:var(--accent-text);border:1px solid rgba(234,179,8,0.2);}
-  .badge.sold{background:var(--success-bg);color:var(--success-text);border:1px solid rgba(34,197,94,0.2);}
+  .badge.transit{background:rgba(59, 130, 246, 0.15);color:#60A5FA;border:1px solid rgba(59, 130, 246, 0.3);}
+  .badge.repair{background:var(--accent-bg);color:var(--accent-text);border:1px solid rgba(234,179,8,0.3);}
+  .badge.pnc{background:rgba(236, 72, 153, 0.15);color:#F472B6;border:1px solid rgba(236, 72, 153, 0.3);}
+  .badge.paperwork{background:var(--warning-bg);color:var(--warning-text);border:1px solid rgba(249, 115, 22, 0.3);}
+  .badge.ready{background:rgba(168, 85, 247, 0.15);color:#C084FC;border:1px solid rgba(168, 85, 247, 0.3);}
+  .badge.sold{background:var(--success-bg);color:var(--success-text);border:1px solid rgba(34,197,94,0.3);}
   
+  .days-tag{
+    font-size:12px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:6px;
+    background:var(--surface-2);
+    color:var(--text-secondary);
+  }
+
   .car-nums{text-align:right;font-size:13.5px;color:var(--text-secondary);}
-  .car-nums .profit{font-size:15px;font-weight:700;color:var(--text);margin-top:2px;}
-  .car-nums .profit.pos{color:var(--success-text);}
-  .car-nums .profit.neg{color:var(--danger-text);}
 
   .car-body{
     border-top:1px solid var(--border);
@@ -197,74 +232,21 @@
   .car-body.open{display:block;}
 
   .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px;border-bottom:1px dashed var(--border);}
-  .row:last-of-type{border-bottom:none;}
   .row .l{color:var(--text-secondary);}
   .row .r{font-weight:600;color:var(--text);}
 
-  /* Lista de gastos */
-  .expenses-list{margin:14px 0;}
-  .expense-row{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 14px;background:var(--surface);border:1px solid var(--border);
-    border-radius:8px;margin-bottom:8px;font-size:13.5px;
-  }
-  .expense-row .desc{flex:1;color:var(--text);}
-  .expense-row .amt{font-weight:600;margin:0 14px;color:var(--accent-text);}
-  .expense-row button{
-    background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;line-height:1;
-    padding:2px 6px;transition: color 0.2s;
-  }
-  .expense-row button:hover{color:var(--danger);}
-
-  /* Formulario Múltiples Gastos */
-  .multi-expenses-container{
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    padding: 14px;
-    border-radius: 10px;
-    margin-top: 14px;
-  }
-  .expense-input-row{
-    display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;align-items:center;
-  }
-  .expense-input-row input[type=text]{flex:2;min-width:140px;}
-  .expense-input-row input[type=number]{flex:1;min-width:90px;}
-  .btn-remove-row{
-    background:transparent;border:none;color:var(--text-muted);
-    font-size:20px;cursor:pointer;padding:0 6px;line-height:1;
-  }
-  .btn-remove-row:hover{color:var(--danger);}
-  .expense-actions-bar{
-    display:flex;gap:10px;margin-top:12px;justify-content:space-between;flex-wrap:wrap;
-  }
-
-  input, select{
-    font-family:var(--font-sans);
-    font-size:14px;
-    padding:10px 12px;
-    border-radius:8px;
-    border:1px solid var(--border-strong);
+  .stage-selector{
+    display:flex;
+    gap:8px;
+    margin: 14px 0;
+    align-items:center;
+    flex-wrap:wrap;
     background:var(--surface);
-    color:var(--text);
-    transition: border-color 0.2s, outline 0.2s;
+    padding:10px;
+    border-radius:8px;
   }
-  input:focus, select:focus{
-    outline:none;
-    border-color:var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-bg);
-  }
+  .stage-selector label{font-size:13px;font-weight:600;color:var(--text-secondary);}
 
-  .car-actions{display:flex;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;}
-
-  /* Empty state */
-  .empty{
-    text-align:center;padding:60px 20px;color:var(--text-secondary);
-    background: var(--surface);
-    border:1px dashed var(--border-strong);border-radius:var(--radius);
-  }
-  .empty p{margin:0 0 18px;font-size:15px;}
-
-  /* Modales */
   .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
     backdrop-filter: blur(4px);
@@ -274,39 +256,12 @@
   .modal{
     background:var(--surface);border:1px solid var(--border-strong);
     border-radius:16px;padding:28px;width:100%;max-width:420px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   }
-  .modal h2{font-size:20px;font-weight:700;margin:0 0 20px;color:var(--text);}
+  .modal h2{font-size:20px;font-weight:700;margin:0 0 20px;}
   .field{margin-bottom:16px;}
   .field label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;}
   .field input{width:100%;}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
-
-  .sold-form{
-    display:flex;gap:10px;margin-top:14px;padding:12px;
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:8px;flex-wrap:wrap;align-items:center;
-  }
-
-  /* Overlay de carga */
-  .loading-overlay{
-    display:none;position:fixed;inset:0;background:rgba(18,19,22,0.8);
-    backdrop-filter: blur(2px);
-    align-items:center;justify-content:center;z-index:100;
-  }
-  .loading-overlay.show{display:flex;}
-  .spinner{
-    width:42px;height:42px;border:3px solid var(--border-strong);border-top-color:var(--accent);
-    border-radius:50%;animation:spin 0.8s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  @media (max-width:520px){
-    .car-nums{text-align:left;}
-    .car-head{align-items:flex-start;}
-    .masthead-btns{width:100%;}
-    .masthead-btns .btn{flex:1;}
-  }
+  .empty{text-align:center;padding:40px;color:var(--text-muted);background:var(--surface);border-radius:12px;}
 </style>
 </head>
 <body>
@@ -315,409 +270,230 @@
   <div class="masthead">
     <div>
       <h1>Control de carros</h1>
-      <p>Compra, reparación y venta</p>
+      <p>Importación EE.UU. & El Salvador</p>
     </div>
     <div class="masthead-btns">
       <button class="btn" id="btn-add-car">+ Agregar carro</button>
-      <button class="btn secondary" id="btn-sync" title="Sincronizar con Google Sheets">↻ Sincronizar</button>
+      <button class="btn secondary" id="btn-sync">↻ Sincronizar</button>
     </div>
     <div class="status" id="status"></div>
   </div>
 
   <div class="metrics" id="metrics"></div>
 
-  <div class="section-title">Carros</div>
-  <div id="car-list"></div>
-  <div class="empty" id="empty-state" style="display:none;">
-    <p>Todavía no has agregado ningún carro.</p>
-    <button class="btn" id="btn-add-car-2">Agregar tu primer carro</button>
+  <!-- Barra de Filtros -->
+  <div class="controls-bar">
+    <div class="filter-group">
+      <!-- Filtro por Estado -->
+      <div class="filter-tabs">
+        <button class="tab-btn active" data-filter="all">Todos</button>
+        <button class="tab-btn" data-filter="active">En reparación</button>
+        <button class="tab-btn" data-filter="sold">Vendidos</button>
+      </div>
+
+      <!-- Filtro por Año -->
+      <select id="year-filter">
+        <option value="all">Todos los años</option>
+      </select>
+    </div>
+
+    <div>
+      <input type="text" id="search-input" placeholder="🔍 Buscar vehículo...">
+    </div>
   </div>
+
+  <div id="car-list"></div>
 
 </div>
 
+<!-- Modal Nuevo Carro -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <h2>Nuevo carro</h2>
+    <h2>Nuevo vehículo</h2>
     <div class="field">
-      <label>Descripción (marca, modelo, año)</label>
-      <input type="text" id="new-name" placeholder="Ej: Toyota Corolla 2016">
+      <label>Vehículo (Ej: Nissan Rogue 2023)</label>
+      <input type="text" id="new-name" placeholder="Marca Modelo Año">
     </div>
     <div class="field">
-      <label>Precio de compra</label>
-      <input type="number" id="new-price" placeholder="0.00" min="0" step="0.01">
+      <label>Año del modelo</label>
+      <input type="number" id="new-year" placeholder="Ej: 2023" min="2000" max="2027">
     </div>
     <div class="field">
-      <label>Fecha de compra</label>
+      <label>Costo de Compra (USD)</label>
+      <input type="number" id="new-price" placeholder="0.00">
+    </div>
+    <div class="field">
+      <label>Fecha de Compra</label>
       <input type="date" id="new-date">
     </div>
-    <div class="modal-actions">
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
       <button class="btn secondary" id="btn-cancel">Cancelar</button>
       <button class="btn" id="btn-save-car">Guardar</button>
     </div>
   </div>
 </div>
 
-<div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-</div>
-
 <script>
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1b7dGmQh2DO0rs8pBH30xZbktf9MzqkvhSWHCuJo65x7FOOE63eFqY0YoeT2S7gLW4A/exec';
+let cars = [
+  { id: '1', name: 'Nissan Rogue 2023', year: 2023, purchasePrice: 12432.83, purchaseDate: '2026-07-02', stage: 'repair', sold: false, expenses: [] },
+  { id: '2', name: 'Civic 2019 Coupe', year: 2019, purchasePrice: 8899.38, purchaseDate: '2026-06-15', stage: 'pnc', sold: false, expenses: [] },
+  { id: '3', name: 'Nissan Rogue Sport 2020', year: 2020, purchasePrice: 9499.70, purchaseDate: '2026-04-10', stage: 'sold', sold: true, salePrice: 9799.70, expenses: [] },
+  { id: '4', name: 'Nissan Rogue 2020', year: 2020, purchasePrice: 7537.94, purchaseDate: '2026-03-01', stage: 'sold', sold: true, salePrice: 9150.00, expenses: [] }
+];
 
-let cars = [];
 let openCarId = null;
+let currentFilter = 'all';
+let selectedYear = 'all';
+let searchQuery = '';
 
-function showStatus(msg, type = 'info'){
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = 'status ' + type;
-}
+function fmt(n){ return '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-function showLoading(show = true){
-  document.getElementById('loading-overlay').classList.toggle('show', show);
-}
-
-function fmt(n){
-  n = Number(n) || 0;
-  return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-async function callGoogleAppsScript(action, data){
-  showLoading(true);
-  try{
-    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({action, data})
-    });
-    const result = await response.json();
-    showLoading(false);
-    if(result.success){
-      showStatus('Sincronizado con éxito', 'success');
-      return result;
-    }else{
-      showStatus('Error: ' + result.error, 'error');
-      return null;
-    }
-  }catch(e){
-    showLoading(false);
-    showStatus('Error de conexión', 'error');
-    console.error(e);
-    return null;
-  }
-}
-
-async function loadFromSheet(){
-  const result = await callGoogleAppsScript('getCars', {});
-  if(result && result.cars){
-    cars = result.cars;
-    render();
-  }
-}
-
-async function saveCar(car){
-  render();
-  const result = await callGoogleAppsScript('saveCar', {car});
-  if(!result){
-    showStatus('Error al guardar en Google Sheets, revisa tu conexión', 'error');
-  }
-}
-
-async function deleteCarFromSheet(carId){
-  const result = await callGoogleAppsScript('deleteCar', {carId});
-  if(result){
-    cars = cars.filter(c=>c.id !== carId);
-    render();
-  }
-}
-
-function carExpensesTotal(car){
-  return (car.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
-}
-
-function carInvested(car){
-  return Number(car.purchasePrice||0) + carExpensesTotal(car);
-}
-
-function carProfit(car){
-  if(!car.sold) return null;
-  return Number(car.salePrice||0) - carInvested(car);
-}
-
-function renderMetrics(){
-  const activos = cars.filter(c=>!c.sold);
-  const vendidos = cars.filter(c=>c.sold);
+function populateYearFilter(){
+  const yearSelect = document.getElementById('year-filter');
+  // Extraer años únicos disponibles en los datos
+  const years = [...new Set(cars.map(c => c.year || extractYearFromName(c.name)).filter(Boolean))].sort((a,b)=>b-a);
   
-  // AHORA: Invertido actual toma únicamente los carros activos (no el historial vendido)
-  const totalInvertidoActivo = activos.reduce((s,c)=>s+carInvested(c),0);
-  const gananciaTotal = vendidos.reduce((s,c)=>s+carProfit(c),0);
+  yearSelect.innerHTML = '<option value="all">Todos los años</option>' + 
+    years.map(y => `<option value="${y}" ${selectedYear == y ? 'selected':''}>Año ${y}</option>`).join('');
+}
 
-  const el = document.getElementById('metrics');
-  el.innerHTML = `
-    <div class="metric">
-      <div class="label">Invertido (Carros Activos)</div>
-      <div class="value">${fmt(totalInvertidoActivo)}</div>
-    </div>
-    <div class="metric">
-      <div class="label">Carros activos</div>
-      <div class="value">${activos.length}</div>
-    </div>
-    <div class="metric">
-      <div class="label">Carros vendidos</div>
-      <div class="value">${vendidos.length}</div>
-    </div>
-    <div class="metric">
-      <div class="label">Ganancia total</div>
-      <div class="value ${gananciaTotal>=0?'pos':'neg'}">${fmt(gananciaTotal)}</div>
-    </div>
-  `;
+function extractYearFromName(name){
+  const match = name.match(/\b(20\d{2})\b/);
+  return match ? parseInt(match[0]) : null;
+}
+
+function calcDays(startDateStr){
+  if(!startDateStr) return 0;
+  const start = new Date(startDateStr);
+  const now = new Date();
+  return Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24)); 
 }
 
 function render(){
-  renderMetrics();
+  populateYearFilter();
   const list = document.getElementById('car-list');
-  const empty = document.getElementById('empty-state');
-  if(cars.length===0){
-    list.innerHTML = '';
-    empty.style.display = 'block';
+  
+  let filtered = cars.filter(c => {
+    // Filtro por estado
+    const matchesStatus = (currentFilter === 'all') ||
+                          (currentFilter === 'active' && !c.sold) ||
+                          (currentFilter === 'sold' && c.sold);
+    
+    // Filtro por año
+    const carYear = c.year || extractYearFromName(c.name);
+    const matchesYear = (selectedYear === 'all') || (carYear == selectedYear);
+
+    // Búsqueda
+    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesStatus && matchesYear && matchesSearch;
+  });
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty">No hay vehículos que coincidan con los filtros seleccionados.</div>`;
     return;
   }
-  empty.style.display = 'none';
 
-  const sorted = [...cars].sort((a,b)=> (a.sold===b.sold)?0:(a.sold?1:-1));
-
-  list.innerHTML = sorted.map(car=>{
-    const invested = carInvested(car);
-    const profit = carProfit(car);
+  list.innerHTML = filtered.map(car => {
+    const days = calcDays(car.purchaseDate);
     const isOpen = openCarId === car.id;
+    const stage = car.stage || (car.sold ? 'sold' : 'repair');
+
+    const stageMap = {
+      'transit': {label: '🚢 En Tránsito', cls: 'transit'},
+      'repair': {label: '🛠️ En Taller', cls: 'repair'},
+      'pnc': {label: '📋 Experticia PNC', cls: 'pnc'},
+      'paperwork': {label: '📄 En Placas', cls: 'paperwork'},
+      'ready': {label: '✨ Listo para Venta', cls: 'ready'},
+      'sold': {label: '✅ Vendido', cls: 'sold'}
+    };
+
     return `
     <div class="car">
-      <div class="car-head" data-toggle="${car.id}">
+      <div class="car-head" onclick="toggleCar('${car.id}')">
         <div class="car-title">
-          <span class="name">${escapeHtml(car.name)}</span>
-          <span class="badge ${car.sold?'sold':'active'}">${car.sold?'Vendido':'En reparación'}</span>
+          <span class="name">${car.name}</span>
+          <span class="badge ${stageMap[stage].cls}">${stageMap[stage].label}</span>
+          ${!car.sold ? `<span class="days-tag">${days} días en proceso</span>` : ''}
         </div>
         <div class="car-nums">
-          <div>Invertido: <strong>${fmt(invested)}</strong></div>
-          ${car.sold ? `<div class="profit ${profit>=0?'pos':'neg'}">Ganancia: ${fmt(profit)}</div>` : ''}
+          <div>Invertido: <strong>${fmt((car.purchasePrice||0) + (car.expenses||[]).reduce((s,e)=>s+e.amount,0))}</strong></div>
         </div>
       </div>
-      <div class="car-body ${isOpen?'open':''}" id="body-${car.id}">
-        <div class="row"><span class="l">Precio de compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
-        <div class="row"><span class="l">Fecha de compra</span><span class="r">${car.purchaseDate||'—'}</span></div>
-        <div class="row"><span class="l">Gastos de reparación</span><span class="r">${fmt(carExpensesTotal(car))}</span></div>
-        ${car.sold ? `
-        <div class="row"><span class="l">Precio de venta</span><span class="r">${fmt(car.salePrice)}</span></div>
-        <div class="row"><span class="l">Fecha de venta</span><span class="r">${car.saleDate||'—'}</span></div>
-        ` : ''}
 
-        <div class="section-title" style="margin-top:16px;">Gastos</div>
-        <div class="expenses-list">
-           ${(car.expenses||[]).map(e=>`
-            <div class="expense-row">
-              <span class="desc">${escapeHtml(e.desc)}</span>
-              <span class="amt">${fmt(e.amount)}</span>
-              <button data-del-expense="${car.id}|${e.id}" aria-label="Eliminar gasto">&times;</button>
-            </div>
-          `).join('') || '<div style="font-size:13px;color:var(--text-muted);">Sin gastos todavía.</div>'}
+      <div class="car-body ${isOpen?'open':''}">
+        <div class="stage-selector">
+          <label>Cambiar Etapa:</label>
+          <select onchange="updateStage('${car.id}', this.value)">
+            <option value="transit" ${stage==='transit'?'selected':''}>🚢 En Tránsito</option>
+            <option value="repair" ${stage==='repair'?'selected':''}>🛠️ En Taller</option>
+            <option value="pnc" ${stage==='pnc'?'selected':''}>📋 Experticia PNC</option>
+            <option value="paperwork" ${stage==='paperwork'?'selected':''}>📄 En Placas / Sertracen</option>
+            <option value="ready" ${stage==='ready'?'selected':''}>✨ Listo para Venta</option>
+          </select>
         </div>
 
-        <div class="multi-expenses-container">
-          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-secondary);">Agregar nuevos gastos:</div>
-          <div id="exp-rows-${car.id}">
-            <div class="expense-input-row">
-              <input type="text" placeholder="Ej: Mecánico / Repuesto" class="exp-desc">
-              <input type="number" placeholder="Monto" min="0" step="0.01" class="exp-amt">
-              <button class="btn-remove-row" style="visibility:hidden;">&times;</button>
-            </div>
-          </div>
-          <div class="expense-actions-bar">
-            <button class="btn secondary small" data-add-row="${car.id}">+ Otro gasto</button>
-            <button class="btn small" data-save-expenses="${car.id}">Guardar gastos</button>
-          </div>
-        </div>
-
-        <div class="car-actions">
-          ${!car.sold ? `<button class="btn secondary small" data-mark-sold="${car.id}">Marcar como vendido</button>` : ''}
-          <button class="btn danger-ghost small" data-del-car="${car.id}">Eliminar carro</button>
-        </div>
-
-        <div class="sold-form" id="sold-form-${car.id}" style="display:none;">
-          <input type="number" placeholder="Precio de venta" min="0" step="0.01" id="sale-price-${car.id}">
-          <input type="date" id="sale-date-${car.id}">
-          <button class="btn small" data-confirm-sold="${car.id}">Confirmar venta</button>
-        </div>
+        <div class="row"><span class="l">Año del modelo</span><span class="r">${car.year || extractYearFromName(car.name) || 'N/A'}</span></div>
+        <div class="row"><span class="l">Fecha de Compra</span><span class="r">${car.purchaseDate||'—'}</span></div>
+        <div class="row"><span class="l">Costo de Compra</span><span class="r">${fmt(car.purchasePrice)}</span></div>
       </div>
     </div>
     `;
   }).join('');
-
-  attachDynamicListeners();
 }
 
-function escapeHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s || '';
-  return d.innerHTML;
+function toggleCar(id){ openCarId = openCarId === id ? null : id; render(); }
+
+function updateStage(id, newStage){
+  const car = cars.find(c=>c.id===id);
+  car.stage = newStage;
+  if(newStage === 'sold') car.sold = true;
+  render();
 }
 
-function attachDynamicListeners(){
-  document.querySelectorAll('[data-toggle]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const id = el.getAttribute('data-toggle');
-      openCarId = (openCarId === id) ? null : id;
-      render();
-    });
+// Event Listeners Filtros
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.getAttribute('data-filter');
+    render();
   });
-
-  document.querySelectorAll('[data-add-row]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      const id = el.getAttribute('data-add-row');
-      const container = document.getElementById('exp-rows-'+id);
-      const row = document.createElement('div');
-      row.className = 'expense-input-row';
-      row.innerHTML = `
-        <input type="text" placeholder="Ej: Mecánico / Repuesto" class="exp-desc">
-        <input type="number" placeholder="Monto" min="0" step="0.01" class="exp-amt">
-        <button class="btn-remove-row" onclick="this.parentElement.remove()">&times;</button>
-      `;
-      container.appendChild(row);
-      row.querySelector('input').focus();
-    });
-  });
-
-  document.querySelectorAll('[data-save-expenses]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      const id = el.getAttribute('data-save-expenses');
-      const container = document.getElementById('exp-rows-'+id);
-      const rows = container.querySelectorAll('.expense-input-row');
-      
-      const newExpenses = [];
-      let valid = true;
-
-      rows.forEach(row=>{
-        const desc = row.querySelector('.exp-desc').value.trim();
-        const amtVal = row.querySelector('.exp-amt').value;
-        const amt = parseFloat(amtVal);
-
-        if(desc || !isNaN(amt)){
-          if(!desc || isNaN(amt)){
-            valid = false;
-          } else {
-            newExpenses.push({id: 'e' + Date.now() + Math.random().toString(36).substr(2,4), desc, amount: amt});
-          }
-        }
-      });
-
-      if(!valid){
-        showStatus('Verifica que todos los gastos ingresados tengan descripción y monto válido', 'error');
-        return;
-      }
-
-      if(newExpenses.length === 0){
-        showStatus('Ingresa al menos un gasto', 'error');
-        return;
-      }
-
-      const car = cars.find(c=>c.id===id);
-      car.expenses = car.expenses || [];
-      car.expenses.push(...newExpenses);
-      
-      openCarId = id;
-      saveCar(car);
-    });
-  });
-
-  document.querySelectorAll('[data-del-expense]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      const [carId, expId] = el.getAttribute('data-del-expense').split('|');
-      const car = cars.find(c=>c.id===carId);
-      car.expenses = (car.expenses||[]).filter(e=>e.id!==expId);
-      openCarId = carId;
-      saveCar(car);
-    });
-  });
-
-  document.querySelectorAll('[data-mark-sold]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      const id = el.getAttribute('data-mark-sold');
-      const form = document.getElementById('sold-form-'+id);
-      form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-    });
-  });
-
-  document.querySelectorAll('[data-confirm-sold]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      const id = el.getAttribute('data-confirm-sold');
-      const price = parseFloat(document.getElementById('sale-price-'+id).value);
-      const date = document.getElementById('sale-date-'+id).value;
-      if(isNaN(price)){
-        showStatus('Ingresa el precio de venta', 'error');
-        return;
-      }
-      const car = cars.find(c=>c.id===id);
-      car.sold = true;
-      car.salePrice = price;
-      car.saleDate = date;
-      openCarId = id;
-      saveCar(car);
-    });
-  });
-
-  document.querySelectorAll('[data-del-car]').forEach(el=>{
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      if(confirm('¿Eliminar este carro?')){
-        const id = el.getAttribute('data-del-car');
-        deleteCarFromSheet(id);
-      }
-    });
-  });
-}
-
-function openModal(){
-  document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('new-name').value='';
-  document.getElementById('new-price').value='';
-  document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
-}
-
-function closeModal(){
-  document.getElementById('modal-overlay').classList.remove('open');
-}
-
-document.getElementById('btn-add-car').addEventListener('click', openModal);
-document.getElementById('btn-add-car-2').addEventListener('click', openModal);
-document.getElementById('btn-cancel').addEventListener('click', closeModal);
-document.getElementById('btn-sync').addEventListener('click', loadFromSheet);
-document.getElementById('modal-overlay').addEventListener('click', (e)=>{
-  if(e.target.id === 'modal-overlay') closeModal();
 });
 
-document.getElementById('btn-save-car').addEventListener('click', ()=>{
+document.getElementById('year-filter').addEventListener('change', (e) => {
+  selectedYear = e.target.value;
+  render();
+});
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+
+document.getElementById('btn-add-car').onclick = () => document.getElementById('modal-overlay').classList.add('open');
+document.getElementById('btn-cancel').onclick = () => document.getElementById('modal-overlay').classList.remove('open');
+
+document.getElementById('btn-save-car').onclick = () => {
   const name = document.getElementById('new-name').value.trim();
+  const year = parseInt(document.getElementById('new-year').value);
   const price = parseFloat(document.getElementById('new-price').value);
   const date = document.getElementById('new-date').value;
-  if(!name || isNaN(price)){
-    showStatus('Completa descripción y precio', 'error');
-    return;
-  }
-  const car = {
-    id: 'c'+Date.now(),
-    name, purchasePrice: price, purchaseDate: date,
-    expenses: [], sold:false, salePrice:null, saleDate:null
-  };
-  cars.push(car);
-  openCarId = car.id;
-  saveCar(car);
-  closeModal();
-});
 
-loadFromSheet();
+  if(!name || isNaN(price)){ alert('Ingresa nombre y precio válidos'); return; }
+
+  cars.push({
+    id: 'c' + Date.now(),
+    name, year: year || extractYearFromName(name),
+    purchasePrice: price, purchaseDate: date,
+    stage: 'repair', sold: false, expenses: []
+  });
+
+  document.getElementById('modal-overlay').classList.remove('open');
+  render();
+};
+
+render();
 </script>
 </body>
 </html>
